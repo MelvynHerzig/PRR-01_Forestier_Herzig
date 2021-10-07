@@ -109,7 +109,7 @@ func (h *Hostel) GetRoomsState(name string, noDay uint) ([]uint, error) {
 	// Filling room state slice
 	for room := uint(0); room < h.nbRooms; room++ {
 
-		switch h.rooms[room][noDay] {
+		switch h.rooms[room][noDay - 1] {
 		case 0:
 			roomsState[room] = Free
 		case clientId:

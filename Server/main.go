@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Server/hostel"
+	hostel "Server/hostel"
 	"bufio"
 	"fmt"
 	"log"
@@ -75,7 +75,7 @@ func roomManager(nbRooms, nbDays uint) {
 		reservations[room] = make([]string, nbDays)
 	}
 
-	hostel, hostelError := hostel.NewHostel(nbRooms, nbDays)
+	hostelManager, hostelError := hostel.NewHostel(nbRooms, nbDays)
 
 	if hostelError != nil {
 		log.Fatal(hostelError)
@@ -90,7 +90,7 @@ func roomManager(nbRooms, nbDays uint) {
 
 			case "LOGIN":
 				// TODO: Check if username is already connected and return error if true
-				if hostel.RegisterClient(req.User.Username) {
+				if hostelManager.RegisterClient(req.Request.Params[0]) {
 
 					req.User.Username = req.Request.Params[0]
 					req.User.Channel <- "Hello " + req.User.Username + "\n" +
@@ -107,18 +107,18 @@ func roomManager(nbRooms, nbDays uint) {
 				arrivalDay, _ := strconv.ParseUint(req.Request.Params[1], 10, 0)
 				nbNights, _ := strconv.ParseUint(req.Request.Params[2], 10, 0)
 
-				hostel.Book(req.User.Username, uint(roomNumber), uint(arrivalDay), uint(nbNights))
+				hostelManager.Book(req.User.Username, uint(roomNumber), uint(arrivalDay), uint(nbNights))
 
 				// Get occupationList (day)
 			case "ROOMLIST":
 				day, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
 
-				rooms, _ := hostel.GetRoomsState(req.User.Username, uint(day))
+				rooms, _ := hostelManager.GetRoomsState(req.User.Username, uint(day))
 
 				var result string
 
-				for index, _ := range rooms {
-					result += fmt.Sprintf("%s ", hostel.RoomsStateSignification[index])
+				for _, state := range rooms {
+					result += fmt.Sprintf("%s ", hostel.RoomsStateSignification[state])
 				}
 
 				req.User.Channel <- result
@@ -127,7 +127,7 @@ func roomManager(nbRooms, nbDays uint) {
 			case "FREEROOM":
 				arrivalDay, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
 				nbNights, _ := strconv.ParseUint(req.Request.Params[1], 10, 0)
-				val, error := hostel.SearchDisponibility(uint(arrivalDay), uint(nbNights))
+				val, error := hostelManager.SearchDisponibility(uint(arrivalDay), uint(nbNights))
 
 				if error != nil {
 					log.Print(error)
@@ -137,7 +137,7 @@ func roomManager(nbRooms, nbDays uint) {
 			}
 
 		case cli := <-login:
-			clients[cli.User] = hostel.RegisterClient(cli.User.Username)
+			clients[cli.User] = hostelManager.RegisterClient(cli.User.Username)
 
 		case cli := <-quit:
 			delete(clients, cli)
