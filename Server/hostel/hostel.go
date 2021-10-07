@@ -2,12 +2,12 @@ package hostel
 
 import "errors"
 
-type Hostel struct{
-	rooms [][]uint
-	clients map[string]uint
+type Hostel struct {
+	rooms     [][]uint
+	clients   map[string]uint
 	nbClients uint
-	nbRooms uint
-	nbDays uint
+	nbRooms   uint
+	nbDays    uint
 }
 
 // Room states
@@ -18,16 +18,16 @@ const (
 )
 
 var RoomsStateSignification = map[uint]string{
-	Free         : "free",
-	SelfReserved : "Self reserved",
-	Occupied     : "Occupied",
+	Free:         "free",
+	SelfReserved: "Self reserved",
+	Occupied:     "Occupied",
 }
 
 const clientStartId = 1
 
 // Creates a new hosteé
-func NewHostel(nbRooms, nbDays uint) (*Hostel, error){
-	if(nbRooms == 0 || nbDays == 0) {
+func NewHostel(nbRooms, nbDays uint) (*Hostel, error) {
+	if nbRooms == 0 || nbDays == 0 {
 		return nil, errors.New("number of rooms or number of days cannot be 0")
 	}
 
@@ -46,7 +46,7 @@ func NewHostel(nbRooms, nbDays uint) (*Hostel, error){
 }
 
 // true: register successfully, false: already exists
-func (h *Hostel) RegisterClient(name string) bool{
+func (h *Hostel) RegisterClient(name string) bool {
 
 	if err := h.checkClient(name); err == nil {
 		return false
@@ -59,7 +59,7 @@ func (h *Hostel) RegisterClient(name string) bool{
 }
 
 // true, nil if booked successfully else false, err if book failed
-func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error){
+func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error) {
 
 	// Checks
 	if err := h.checkClient(name); err != nil {
@@ -75,16 +75,16 @@ func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error
 	}
 
 	// Room free during booking time ?
-	for day := dayStart; day < dayStart + duration; day++ {
-		if h.rooms[noRoom - 1][day] != Free{
+	for day := dayStart; day < dayStart+duration; day++ {
+		if h.rooms[noRoom-1][day-1] != Free {
 			return false, errors.New("room already booked")
 		}
 	}
 
 	// Booking
 	clientId := h.clients[name]
-	for day := dayStart; day < dayStart + duration; day++ {
-		h.rooms[noRoom][day] = clientId
+	for day := dayStart; day < dayStart+duration; day++ {
+		h.rooms[noRoom-1][day-1] = clientId
 	}
 
 	return true, nil
@@ -110,9 +110,12 @@ func (h *Hostel) GetRoomsState(name string, noDay uint) ([]uint, error) {
 	for room := uint(0); room < h.nbRooms; room++ {
 
 		switch h.rooms[room][noDay] {
-		case 0        : roomsState[room] = Free
-		case clientId : roomsState[room] = SelfReserved
-		default       : roomsState[room] = Occupied
+		case 0:
+			roomsState[room] = Free
+		case clientId:
+			roomsState[room] = SelfReserved
+		default:
+			roomsState[room] = Occupied
 		}
 	}
 
@@ -129,14 +132,14 @@ func (h *Hostel) SearchDisponibility(dayStart, duration uint) (uint, error) {
 
 		free := true
 
-		for day := dayStart ; day <= dayStart + duration - 1; day++{
-			if h.rooms[room][day] != 0 {
+		for day := dayStart; day < dayStart+duration; day++ {
+			if h.rooms[room][day-1] != 0 {
 				free = false
 			}
 		}
 
 		if free == true {
-			return room, nil
+			return room + 1, nil
 		}
 	}
 
@@ -144,9 +147,9 @@ func (h *Hostel) SearchDisponibility(dayStart, duration uint) (uint, error) {
 }
 
 // Return nil if client is registered else not nil
-func (h *Hostel) checkClient (name string) error {
+func (h *Hostel) checkClient(name string) error {
 
-	if _, ok := h.clients[name]; ok != true{
+	if _, ok := h.clients[name]; ok != true {
 		return errors.New("unknown client")
 	}
 
@@ -176,11 +179,11 @@ func (h *Hostel) checkDayNumber(noDay uint) error {
 // Return nil if period is valid [1, h.nbDays] else not nil
 func (h *Hostel) checkPeriod(noDay, duration uint) error {
 
-	if err := h.checkDayNumber(noDay) ; err != nil {
+	if err := h.checkDayNumber(noDay); err != nil {
 		return err
 	}
 
-	if duration == 0 || noDay + duration - 1 > h.nbDays{
+	if duration == 0 || noDay+duration-1 > h.nbDays {
 		return errors.New("invalid duration")
 	}
 

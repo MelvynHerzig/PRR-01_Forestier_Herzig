@@ -51,8 +51,8 @@ var (
 )
 
 type User struct {
-	Username string
-	Channel  client
+	Username   string
+	Channel    client
 	Connection net.Conn
 }
 
@@ -77,11 +77,9 @@ func roomManager(nbRooms, nbDays uint) {
 
 	hostel, hostelError := hostel.NewHostel(nbRooms, nbDays)
 
-	if hostelError != nil{
+	if hostelError != nil {
 		log.Fatal(hostelError)
 	}
-
-
 
 	for {
 		select {
@@ -92,15 +90,17 @@ func roomManager(nbRooms, nbDays uint) {
 
 			case "LOGIN":
 				// TODO: Check if username is already connected and return error if true
+				if hostel.RegisterClient(req.User.Username) {
 
-				req.User.Username = req.Request.Params[0]
-				req.User.Channel <- "Hello " + req.User.Username + "\n" +
-					"You can book our rooms (1-3) for days (1-5)\n" +
-					"Here is the list of commands you can use :\n" +
-					"- BOOK roomNumber, arrivalDay, nbNights\n" +
-					"- ROOMLIST day\n" +
-					"- FREEROOM arrivalDay nbNights\n" +
-					"- QUIT"
+					req.User.Username = req.Request.Params[0]
+					req.User.Channel <- "Hello " + req.User.Username + "\n" +
+						"You can book our rooms (1-3) for days (1-5)\n" +
+						"Here is the list of commands you can use :\n" +
+						"- BOOK roomNumber, arrivalDay, nbNights\n" +
+						"- ROOMLIST day\n" +
+						"- FREEROOM arrivalDay nbNights\n" +
+						"- QUIT"
+				}
 			// Book a room (roomNumber, arrivalDay, nbNights)
 			case "BOOK":
 				roomNumber, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
@@ -113,7 +113,15 @@ func roomManager(nbRooms, nbDays uint) {
 			case "ROOMLIST":
 				day, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
 
-				hostel.GetRoomsState(req.User.Username, uint(day))
+				rooms, _ := hostel.GetRoomsState(req.User.Username, uint(day))
+
+				var result string
+
+				for index, _ := range rooms {
+					result += fmt.Sprintf("%s ", hostel.RoomsStateSignification[index])
+				}
+
+				req.User.Channel <- result
 
 				// Get free room (arrivalDay, nbNights)
 			case "FREEROOM":
@@ -123,10 +131,9 @@ func roomManager(nbRooms, nbDays uint) {
 
 				if error != nil {
 					log.Print(error)
-					continue
+				} else {
+					req.User.Channel <- strconv.FormatUint(uint64(val), 10)
 				}
-
-				req.User.Channel <- strconv.FormatUint(uint64(val), 10)
 			}
 
 		case cli := <-login:
@@ -188,6 +195,10 @@ func doLogin(user *User, input *bufio.Scanner) {
 		}
 
 		requests <- &uReq
+
+		fmt.Println(uReq.User.Username)
+		fmt.Println(user.Username)
+		fmt.Println("-------------")
 
 		if user.Username != "" {
 			return
