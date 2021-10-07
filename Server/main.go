@@ -1,11 +1,13 @@
 package main
 
 import (
+	"Server/hostel"
 	"bufio"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -16,47 +18,56 @@ func main() {
 		return
 	}
 
-	/*NB_ROOMS, errRooms := strconv.Atoi(os.Args[1])
-	NB_DAYS, errDays := strconv.Atoi(os.Args[2])
+	NB_ROOMS, errRooms := strconv.ParseUint(os.Args[1], 10, 0)
+	NB_DAYS, errDays := strconv.ParseUint(os.Args[2], 10, 0)
 
 	if errRooms != nil || errDays != nil {
 		log.Fatal("Paramètres invalides")
 		return
-	}*/
+	}
 
 	listener, err := net.Listen("tcp", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//go roomManager(NB_ROOMS, NB_DAYS)
-go broadcaster()
+	go roomManager(uint(NB_ROOMS), uint(NB_DAYS))
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Print(err)
 			continue
 		}
-		go handleConn(conn)
+		go handleConnection(conn)
 	}
 }
 
 type client chan<- string // an outgoing message channel
 
 var (
-	entering = make(chan client)
-	leaving  = make(chan client)
-	requests = make(chan string)
-	messages = make(chan string)// all incoming client messages
+	login    = make(chan *UserRequest)
+	quit     = make(chan *User)
+	requests = make(chan *UserRequest)
 )
 
 type User struct {
-	Username   string
+	Username string
+	Channel  client
 	Connection net.Conn
 }
 
-func roomManager(nbRooms, nbDays int) {
-	clients := make(map[client]bool)
+type UserRequest struct {
+	User    *User
+	Request Request
+}
+
+type Request struct {
+	Command string
+	Params  []string
+}
+
+func roomManager(nbRooms, nbDays uint) {
+	clients := make(map[*User]bool)
 
 	// 2d slice for reservations
 	reservations := make([][]string, nbRooms)
@@ -64,63 +75,71 @@ func roomManager(nbRooms, nbDays int) {
 		reservations[room] = make([]string, nbDays)
 	}
 
+	hostel, hostelError := hostel.NewHostel(nbRooms, nbDays)
+
+	if hostelError != nil{
+		log.Fatal(hostelError)
+	}
+
+
+
 	for {
 		select {
 		case req := <-requests:
 
-			params := strings.Split(req, " ")
 			// switch sur req, et faire en fonction de la requête
-			switch params[0] {
+			switch req.Request.Command {
 
+			case "LOGIN":
+				// TODO: Check if username is already connected and return error if true
+
+				req.User.Username = req.Request.Params[0]
+				req.User.Channel <- "Hello " + req.User.Username + "\n" +
+					"You can book our rooms (1-3) for days (1-5)\n" +
+					"Here is the list of commands you can use :\n" +
+					"- BOOK roomNumber, arrivalDay, nbNights\n" +
+					"- ROOMLIST day\n" +
+					"- FREEROOM arrivalDay nbNights\n" +
+					"- QUIT"
 			// Book a room (roomNumber, arrivalDay, nbNights)
 			case "BOOK":
-				fmt.Println("BOOK")
+				roomNumber, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
+				arrivalDay, _ := strconv.ParseUint(req.Request.Params[1], 10, 0)
+				nbNights, _ := strconv.ParseUint(req.Request.Params[2], 10, 0)
+
+				hostel.Book(req.User.Username, uint(roomNumber), uint(arrivalDay), uint(nbNights))
 
 				// Get occupationList (day)
 			case "ROOMLIST":
-				fmt.Println("ROOMLIST")
+				day, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
+
+				hostel.GetRoomsState(req.User.Username, uint(day))
 
 				// Get free room (arrivalDay, nbNights)
 			case "FREEROOM":
-				fmt.Println("FREEROOM")
+				arrivalDay, _ := strconv.ParseUint(req.Request.Params[0], 10, 0)
+				nbNights, _ := strconv.ParseUint(req.Request.Params[1], 10, 0)
+				val, error := hostel.SearchDisponibility(uint(arrivalDay), uint(nbNights))
+
+				if error != nil {
+					log.Print(error)
+					continue
+				}
+
+				req.User.Channel <- strconv.FormatUint(uint64(val), 10)
 			}
 
-		case cli := <-entering:
-			clients[cli] = true
+		case cli := <-login:
+			clients[cli.User] = hostel.RegisterClient(cli.User.Username)
 
-		case cli := <-leaving:
+		case cli := <-quit:
 			delete(clients, cli)
-			close(cli)
+			close(cli.Channel)
 		}
 	}
 }
 
 func handleConnection(conn net.Conn) {
-
-}
-
-func broadcaster() {
-	clients := make(map[client]bool) // all connected clients
-	for {
-		select {
-		case msg := <-messages: // broadcaster <- handleConn
-			// Broadcast incoming message to all
-			// clients' outgoing message channels.
-			for cli := range clients {
-				cli <- msg // clientwriter (handleConn) <- broadcaster
-			}
-
-		case cli := <-entering:
-			clients[cli] = true
-
-		case cli := <-leaving:
-			delete(clients, cli)
-			close(cli)
-		}
-	}
-}
-
-func handleConn(conn net.Conn) {
 	ch := make(chan string) // channel 'client' mais utilisé ici dans les 2 sens
 	go func() {             // clientwriter
 		for msg := range ch { // clientwriter <- broadcaster, handleConn
@@ -128,17 +147,50 @@ func handleConn(conn net.Conn) {
 		}
 	}()
 
-	who := conn.RemoteAddr().String()
-	ch <- "You are " + who // clientwriter <- handleConn
-	entering <- ch
-	messages <- who + " has arrived" // broadcaster <- handleConn
+	var user User
+	user.Channel = ch
+	user.Connection = conn
+	user.Channel <- "Welcome in the FH Hotel !\n"
 
 	input := bufio.NewScanner(conn)
-	for input.Scan() { // handleConn <- netcat client
-		messages <- who + ": " + input.Text() // broadcaster <- handleConn
+
+	doLogin(&user, input)
+
+	for input.Scan() {
+
+		req := makeUserRequest(input.Text(), &user)
+
+		requests <- &req
 	}
 
-	leaving <- ch
-	messages <- who + " has left" // broadcaster <- handleConn
+	quit <- &user
 	conn.Close()
+}
+
+func makeUserRequest(req string, user *User) UserRequest {
+	split := strings.Split(req, " ")
+	var uReq UserRequest
+	uReq.Request.Command = split[0]
+	uReq.Request.Params = split[1:]
+	uReq.User = user
+
+	return uReq
+}
+
+func doLogin(user *User, input *bufio.Scanner) {
+	user.Channel <- "Please, identify yourself. Use command \"LOGIN {your name}\""
+	for input.Scan() {
+		uReq := makeUserRequest(input.Text(), user)
+
+		if uReq.Request.Command != "LOGIN" {
+			user.Channel <- "Please, identify yourself. Use command \"LOGIN {your name}\""
+			continue
+		}
+
+		requests <- &uReq
+
+		if user.Username != "" {
+			return
+		}
+	}
 }

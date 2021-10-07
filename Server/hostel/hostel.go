@@ -17,6 +17,12 @@ const (
 	Occupied
 )
 
+var RoomsStateSignification = map[uint]string{
+	Free         : "free",
+	SelfReserved : "Self reserved",
+	Occupied     : "Occupied",
+}
+
 const clientStartId = 1
 
 // Creates a new hosteé
@@ -85,16 +91,12 @@ func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error
 }
 
 // Returns an error if args are invalid else nil with FREE, OCCUPIED or SELF_RESERVED slice
-func (h *Hostel) GetRoomsState(name string, noRoom, noDay uint) ([]uint, error) {
+func (h *Hostel) GetRoomsState(name string, noDay uint) ([]uint, error) {
 
 	roomsState := make([]uint, h.nbRooms)
 
 	// Checks
 	if err := h.checkClient(name); err != nil {
-		return roomsState, err
-	}
-
-	if err := h.checkRoomNumber(noRoom); err != nil {
 		return roomsState, err
 	}
 
@@ -117,7 +119,7 @@ func (h *Hostel) GetRoomsState(name string, noRoom, noDay uint) ([]uint, error) 
 	return roomsState, nil
 }
 
-func (h *Hostel) searchDisponibility(dayStart, duration uint) (uint, error) {
+func (h *Hostel) SearchDisponibility(dayStart, duration uint) (uint, error) {
 
 	if err := h.checkPeriod(dayStart, duration); err != nil {
 		return 0, err
