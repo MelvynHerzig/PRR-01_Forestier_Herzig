@@ -10,6 +10,11 @@ type Hostel struct {
 	nbDays    uint
 }
 
+type client struct {
+	id uint
+	connected bool
+}
+
 // Room states
 const (
 	Free = iota
@@ -25,7 +30,7 @@ var RoomsStateSignification = map[uint]string{
 
 const clientStartId = 1
 
-// Creates a new hosteé
+// Creates a new hostel
 func NewHostel(nbRooms, nbDays uint) (*Hostel, error) {
 	if nbRooms == 0 || nbDays == 0 {
 		return nil, errors.New("number of rooms or number of days cannot be 0")
@@ -45,39 +50,34 @@ func NewHostel(nbRooms, nbDays uint) (*Hostel, error) {
 	return hostel, nil
 }
 
-// true: register successfully, false: already exists
-func (h *Hostel) RegisterClient(name string) bool {
+func (h *Hostel) TryRegister(name string) {
 
-	if err := h.checkClient(name); err == nil {
-		return false
+	if _, ok := h.clients[name]; ok == false {
+		h.clients[name] = clientStartId + h.nbClients
+		h.nbClients++
 	}
-
-	h.clients[name] = clientStartId + h.nbClients
-	h.nbClients++
-
-	return true
 }
 
 // true, nil if booked successfully else false, err if book failed
-func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error) {
+func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) error {
 
 	// Checks
-	if err := h.checkClient(name); err != nil {
-		return false, err
+	if err := h.checkClientRegistered(name); err != nil {
+		return err
 	}
 
 	if err := h.checkRoomNumber(noRoom); err != nil {
-		return false, err
+		return err
 	}
 
 	if err := h.checkPeriod(dayStart, duration); err != nil {
-		return false, err
+		return err
 	}
 
 	// Room free during booking time ?
 	for day := dayStart; day < dayStart+duration; day++ {
 		if h.rooms[noRoom-1][day-1] != Free {
-			return false, errors.New("room already booked")
+			return errors.New("room already booked")
 		}
 	}
 
@@ -87,7 +87,7 @@ func (h *Hostel) Book(name string, noRoom, dayStart, duration uint) (bool, error
 		h.rooms[noRoom-1][day-1] = clientId
 	}
 
-	return true, nil
+	return nil
 }
 
 // Returns an error if args are invalid else nil with FREE, OCCUPIED or SELF_RESERVED slice
@@ -96,7 +96,7 @@ func (h *Hostel) GetRoomsState(name string, noDay uint) ([]uint, error) {
 	roomsState := make([]uint, h.nbRooms)
 
 	// Checks
-	if err := h.checkClient(name); err != nil {
+	if err := h.checkClientRegistered(name); err != nil {
 		return roomsState, err
 	}
 
@@ -146,11 +146,11 @@ func (h *Hostel) SearchDisponibility(dayStart, duration uint) (uint, error) {
 	return 0, errors.New("no free room for this period")
 }
 
-// Return nil if client is registered else not nil
-func (h *Hostel) checkClient(name string) error {
+// Return nil if client is logged else an error
+func (h *Hostel) checkClientRegistered(name string) error {
 
 	if _, ok := h.clients[name]; ok != true {
-		return errors.New("unknown client")
+		return errors.New("unknown client name. Please register first")
 	}
 
 	return nil
