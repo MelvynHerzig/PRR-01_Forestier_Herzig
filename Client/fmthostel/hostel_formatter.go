@@ -95,7 +95,11 @@ func displayFreeroom(splitResponse string) {
 
 	args := strings.Split(splitResponse, " ")
 
-	fmt.Println("Room  ", args[0], " is free from day ", args[1], " during ", args[2], " nights.")
+	if args[0] == "0" {
+		fmt.Println("No rooms free from day ", args[1], " for ", args[2], " night(s).")
+	} else {
+		fmt.Println("Room  ", args[0], " is free from day ", args[1], " during ", args[2], " nights.")
+	}
 }
 
 
