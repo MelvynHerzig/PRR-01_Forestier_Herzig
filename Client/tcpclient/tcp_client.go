@@ -1,4 +1,4 @@
-// Package tcpclient implements a simple client TCP to communicate with a TCP server that
+// Package tcpclient implements a simple TCP client to communicate with a TCP server that
 // manages hostel rooms.
 package tcpclient
 
@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// StartClient Connects to the server. This function go routine reads from user and another go routine reads from
+// StartClient connects to the server. This function goroutine reads from user and another goroutine reads from
 // server. This loops until application is shutdown or connection closed.
 func StartClient() {
 

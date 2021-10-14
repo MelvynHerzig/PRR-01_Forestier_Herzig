@@ -2,7 +2,7 @@ package main
 
 import ( "Client/tcpclient" )
 
-// main Starts hostel tcp client.
+// main starts hostel tcp client.
 func main() {
 	tcpclient.StartClient()
 }

@@ -1,4 +1,4 @@
-// Package main implements the Server TCP logic.
+// Package tcpserver implements the Server TCP logic.
 // The main.go file is responsible for TCP "worker" and
 // the request.go file is responsible for request that can
 // be submitted to the job logic layer.
@@ -6,21 +6,32 @@ package tcpserver
 
 import (
 	"Server/hostel"
+	"fmt"
 	"strconv"
+	"time"
 )
 
+// DebugMode enables debug mode if set to true.
+// Debug mode consist of logging server actions and sleeping 20s when 2 clients logs in, in order to
+// let enough time to create a race condition.
+var DebugMode = false
 
-// hostelRequestable Interface of request that can be made to hostel.
+// Number of logged client. It is race safe since incremented and decremented in loginRequest.execute
+//and logoutRequest.execute. All this, because the execute methodes are handled in hostelManager function
+// that respects Communicating Sequential Processes.
+var nbLoggedClient = 0;
+
+// hostelRequestable interface of request that can be made to hostel.
 type hostelRequestable interface {
 	execute(h *hostel.Hostel, clients map[client]string)
 }
 
-// hostelRequest Base content of all kind of request.
+// hostelRequest base content of all kind of request.
 type hostelRequest struct {
 	chanToHandler client
 }
 
-// loginRequest Request that log clients in, in order to book, inspect and search free room.
+// loginRequest request that logs clients in, in order to book, inspect and search free room.
 // Clients names are supposed to be unique. Two clients with the same name would be considered (from Server pov) as
 // the same person. So their actions would impact each other.
 type loginRequest struct {
@@ -28,33 +39,33 @@ type loginRequest struct {
 	clientName string
 }
 
-// logoutRequest Request that log client out, in order to change "account".
+// logoutRequest request that log client out, in order to change "account".
 type logoutRequest struct {
 	hostelRequest
 }
 
-// bookRequest Request used to book a room.
+// bookRequest request used to book a room.
 type bookRequest struct {
 	hostelRequest
 	roomNumber uint
-	dayStart uint
+	nightStart uint
 	duration uint
 }
 
-// roomStateRequest Request used to get the state of rooms for a given day.
+// roomStateRequest request used to get the state of rooms for a given night.
 type roomStateRequest struct {
 	hostelRequest
-	dayNumber uint
+	nightNumber uint
 }
 
-// disponiblityRequest Request used to find a free room for a given day and duration.
+// disponiblityRequest Request used to find a free room for a given night and duration.
 type disponibilityRequest struct {
 	hostelRequest
-	dayStart uint
-	duration uint
+	nightStart uint
+	duration   uint
 }
 
-// execute If user is not already logged in, log him in, otherwise explains error. All is notified to clients channel.
+// execute if user is not already logged in, log him in, otherwise explains error. All is notified to clients channel.
 func (r *loginRequest) execute(h *hostel.Hostel, clients map[client]string) {
 
 	if clients[r.chanToHandler] != "" {
@@ -65,10 +76,21 @@ func (r *loginRequest) execute(h *hostel.Hostel, clients map[client]string) {
 	clients[r.chanToHandler] = r.clientName
 	h.TryRegister(r.clientName)
 
+	if DebugMode {
+		debugModeLog(r.clientName + " logged in.")
+		nbLoggedClient++
+
+		if nbLoggedClient == 2 {
+			debugModeLog("Server request handler suspended. Resume in 20s.")
+			time.Sleep(20 * time.Second)
+			debugModeLog("Server request handler resumed.")
+		}
+	}
+
 	r.chanToHandler <- "RESULT_LOGIN"
 }
 
-// execute If user is logged in, log him out, otherwise explains error. All is notified to clients channel.
+// execute if user is logged in, log him out, otherwise explains error. All is notified to clients channel.
 func (r *logoutRequest) execute(h *hostel.Hostel, clients map[client]string) {
 
 	if clients[r.chanToHandler] == "" {
@@ -76,11 +98,18 @@ func (r *logoutRequest) execute(h *hostel.Hostel, clients map[client]string) {
 		return
 	}
 
+	oldName := clients[r.chanToHandler]
 	clients[r.chanToHandler] = ""
+
+	if DebugMode {
+		nbLoggedClient--
+		debugModeLog(oldName + " logged out.")
+	}
+
 	r.chanToHandler <- "RESULT_LOGOUT"
 }
 
-// execute Try booking a room. Client must be logged in. All is notified to clients channel.
+// execute tries to book a room. Client must be logged in. All is notified to clients channel.
 func (r *bookRequest) execute(h *hostel.Hostel, clients map[client]string) {
 
 	if clients[r.chanToHandler] == "" {
@@ -88,19 +117,23 @@ func (r *bookRequest) execute(h *hostel.Hostel, clients map[client]string) {
 		return
 	}
 
-	if err := h.Book(clients[r.chanToHandler], r.roomNumber, r.dayStart, r.duration); err != nil {
+	if err := h.Book(clients[r.chanToHandler], r.roomNumber, r.nightStart, r.duration); err != nil {
 		sendError(r.chanToHandler,  err.Error())
 		return
 	}
 
 	strRoom     := strconv.FormatUint(uint64(r.roomNumber), 10)
-	strDay      := strconv.FormatUint(uint64(r.dayStart), 10)
+	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
 	strDuration := strconv.FormatUint(uint64(r.duration), 10)
 
-	r.chanToHandler <- "RESULT_BOOK " + strRoom + " " + strDay + " " + strDuration
+	if DebugMode {
+		debugModeLog( clients[r.chanToHandler] + " booked room. Room " + strRoom + " from night " + strNight + " for " + strDuration + " night(s)")
+	}
+
+	r.chanToHandler <- "RESULT_BOOK " + strRoom + " " + strNight + " " + strDuration
 }
 
-// execute Try getting room state for a given day. Client must be logged in. All is notified to clients channel.
+// execute tries to get room state for a given night. Client must be logged in. All is notified to clients channel.
 func (r *roomStateRequest) execute(h *hostel.Hostel, clients map[client]string) {
 
 	if clients[r.chanToHandler] == "" {
@@ -108,7 +141,7 @@ func (r *roomStateRequest) execute(h *hostel.Hostel, clients map[client]string) 
 		return
 	}
 
-	states, err := h.GetRoomsState(clients[r.chanToHandler], r.dayNumber)
+	states, err := h.GetRoomsState(clients[r.chanToHandler], r.nightNumber)
 	if err != nil {
 		sendError(r.chanToHandler, err.Error())
 		return
@@ -123,10 +156,14 @@ func (r *roomStateRequest) execute(h *hostel.Hostel, clients map[client]string) 
 		res += state
 	}
 
+	if DebugMode {
+		debugModeLog( clients[r.chanToHandler] + " is consulting rooms for night " + strconv.FormatUint(uint64(r.nightNumber), 10))
+	}
+
 	r.chanToHandler <- "RESULT_ROOMLIST " + res
 }
 
-// execute Try finding a free room. Client must be logged in. All is notified to clients channel.
+// execute tries to find a free room. Client must be logged in. All is notified to clients channel.
 func (r *disponibilityRequest) execute(h *hostel.Hostel, clients map[client]string) {
 
 	if clients[r.chanToHandler] == "" {
@@ -134,15 +171,23 @@ func (r *disponibilityRequest) execute(h *hostel.Hostel, clients map[client]stri
 		return
 	}
 
-	room, err := h.SearchDisponibility(r.dayStart, r.duration)
+	room, err := h.SearchDisponibility(r.nightStart, r.duration)
 	if err != nil {
 		sendError(r.chanToHandler, err.Error())
 		return
 	}
 
 	strRoom     := strconv.FormatUint(uint64(room), 10)
-	strDay      := strconv.FormatUint(uint64(r.dayStart), 10)
+	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
 	strDuration := strconv.FormatUint(uint64(r.duration), 10)
 
-	r.chanToHandler <- "RESULT_FREEROOM " + strRoom + " " + strDay + " " + strDuration
+	if DebugMode {
+		debugModeLog( clients[r.chanToHandler] + " found a free room. Room " + strRoom + " from night " + strNight + " for " + strDuration + " night(s)")
+	}
+
+	r.chanToHandler <- "RESULT_FREEROOM " + strRoom + " " + strNight + " " + strDuration
+}
+
+func debugModeLog(message string) {
+	fmt.Println("DEBUG >> ", message)
 }

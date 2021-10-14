@@ -1,5 +1,4 @@
-// Package fmthostel is responsible for reading hostel server response message
-// and format them for user.
+// Package fmthostel is responsible to read hostel server responses and format them for user.
 // Good response start with RESULT_<COMMAND ANSWERED>.
 // Errors response start with ERROR
 package fmthostel
@@ -9,7 +8,7 @@ import (
 	"strings"
 )
 
-// FetchDisplayResponse Fetch server responses then format and display the answer.
+// FetchDisplayResponse fetches server responses then formats and displays the answer.
 func FetchDisplayResponse(response string) {
 	trimResponse := strings.TrimSpace(response)
 	splitsResponse := strings.SplitN(trimResponse, " ", 2)
@@ -34,7 +33,7 @@ func FetchDisplayResponse(response string) {
 	}
 }
 
-// displayError Prints hostel server welcome message.
+// displayError prints hostel server welcome message.
 func displayWelcome(splitResponse string) {
 	args := strings.Split(splitResponse, "- ")
 
@@ -48,7 +47,7 @@ func displayWelcome(splitResponse string) {
 	}
 }
 
-// displayError Prints error message to user.
+// displayError prints error message to user.
 func displayError(splitsResponse []string) {
 
 	fmt.Print("/!\\ Operation failed ")
@@ -60,26 +59,26 @@ func displayError(splitsResponse []string) {
 	fmt.Print("\n")
 }
 
-// displayLoginSuccess Prints that the user successfully logged in.
+// displayLoginSuccess prints that the user successfully logged in.
 func displayLoginSuccess() {
 
 	fmt.Println("Login success")
 }
 
-// displayLogoutSuccess Prints that the user successfully logged out.
+// displayLogoutSuccess prints that the user successfully logged out.
 func displayLogoutSuccess() {
 
 	fmt.Println("Logout success")
 }
 
-// displayError Prints booking summary confirmation.
+// displayError prints booking summary confirmation.
 func displayBook(splitResponse string) {
 	args := strings.Split(splitResponse, " ")
 
-	fmt.Println("You successfully booked room ", args[0], " for ", args[2], " night(s), starting day", args[1])
+	fmt.Println("You successfully booked room ", args[0], " for ", args[2], " night(s), starting night", args[1])
 }
 
-// displayRoomlist Prints the room list with their state.
+// displayRoomlist prints the room list with their state.
 func displayRoomlist(splitResponse string) {
 
 	states := strings.Split(splitResponse, ",")
@@ -90,15 +89,16 @@ func displayRoomlist(splitResponse string) {
 	}
 }
 
-// displayRoomlist Prints the free room found.
+// displayRoomlist prints the free room found.
+// displayRoomlist prints the free room found.
 func displayFreeroom(splitResponse string) {
 
 	args := strings.Split(splitResponse, " ")
 
 	if args[0] == "0" {
-		fmt.Println("No rooms free from day ", args[1], " for ", args[2], " night(s).")
+		fmt.Println("No rooms free from night ", args[1], " for ", args[2], " night(s).")
 	} else {
-		fmt.Println("Room  ", args[0], " is free from day ", args[1], " during ", args[2], " nights.")
+		fmt.Println("Room  ", args[0], " is free from night ", args[1], " during ", args[2], " night(s).")
 	}
 }
 

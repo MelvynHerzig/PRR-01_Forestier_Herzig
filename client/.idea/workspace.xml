@@ -5,16 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="53491952-0965-4578-9bc7-3adb38712cf8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/tcpclient/tcp_client.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../server/tcpserver/tcp_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fmthostel/hostel_formatter.go" beforeDir="false" afterPath="$PROJECT_DIR$/fmthostel/hostel_formatter.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/request.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/request.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/tcp_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/tcp_server.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
