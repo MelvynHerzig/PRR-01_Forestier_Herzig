@@ -137,7 +137,7 @@ func (h *Hostel) SearchDisponibility(dayStart, duration uint) (uint, error) {
 		}
 	}
 
-	return 0, errors.New("no free room for this period")
+	return 0, nil
 }
 
 // checkClientRegistered Checks if the client is registered in hostel clients map. Return nil if this is the case.

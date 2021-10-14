@@ -2,7 +2,7 @@
 // The main.go file is responsible for TCP "worker" and
 // the request.go file is responsible for request that can
 // be submitted to the job logic layer.
-package main
+package tcpserver
 
 import (
 	"Server/hostel"
