@@ -76,7 +76,7 @@ func displayLogoutSuccess() {
 func displayBook(splitResponse string) {
 	args := strings.Split(splitResponse, " ")
 
-	fmt.Println("You successfully booked room ", args[0], " for ", args[2], " day(s), starting day", args[1])
+	fmt.Println("You successfully booked room ", args[0], " for ", args[2], " night(s), starting day", args[1])
 }
 
 // displayRoomlist Prints the room list with their state.
@@ -95,7 +95,7 @@ func displayFreeroom(splitResponse string) {
 
 	args := strings.Split(splitResponse, " ")
 
-	fmt.Println("Room  ", args[0], " is free from day ", args[1], " during ", args[2])
+	fmt.Println("Room  ", args[0], " is free from day ", args[1], " during ", args[2], " nights.")
 }
 
 
