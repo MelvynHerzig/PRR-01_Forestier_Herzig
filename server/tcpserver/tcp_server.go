@@ -119,7 +119,7 @@ func handleConnection(conn net.Conn) {
 		}
 	}()
 
-	ch <- "WELCOME Welcome in the FH Hotel ! Nb rooms: "  + strNbRooms + ", nb nights: " + strNbNights +
+	ch <- "WELCOME Welcome in the FH Hostel ! Nb rooms: "  + strNbRooms + ", nb nights: " + strNbNights +
 		"- LOGIN <userName>" +
 		"- LOGOUT" +
 		"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
