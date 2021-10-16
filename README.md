@@ -11,8 +11,8 @@ Respository du laboratoire 01 pour le cours PRR
 > `$ git clone https://github.com/MelvynHerzig/PRR-01_Forestier_Herzig.git`
 
 * Démarrer le serveur. Trois arguments sont nécessaires.
-  * Nombre de chambres dans l'hotel (obligatoire).
-  * Nombre de nuits dans l'hotel (obligatoire).
+  * Nombre de chambres dans l'hôtel (obligatoire).
+  * Nombre de nuits dans l'hôtel (obligatoire).
   * -debug pour lancer en mode debug (facultatif).
 
 > Depuis le dossier <i>server</i>.
@@ -23,8 +23,9 @@ Respository du laboratoire 01 pour le cours PRR
 > Pour lancer un serveur avec 5 chambres sur 20 nuits avec debug: </br>
 > `$ go run . 5 20 -debug`
 
-* Démarrer le(s) client(s). Une argument est nécessaire.
+* Démarrer le(s) client(s). Un argument est nécessaire.
   * Adresse ip du serveur. 
+
 > Depuis le dossier <i>client</i>.
 >
 > Pour lancer un client qui se connecte à un serveur sur la même machine.
@@ -34,15 +35,19 @@ Respository du laboratoire 01 pour le cours PRR
 > `$ go run . 1.2.3.4`
 
 # Utilisation
-Toutes les fonctionnalités de la donnée du laboratoire ont été implémentées avec succès.
+__Fonctionne__\
+Toutes les fonctionnalités de la donnée ont été implémentées avec succès.
+
+__Ne fonctionne pas__\
+Rien
 
 ## Serveur
 Une fois le serveur lancé, aucune action supplémentaire nécessaire.
 
 ## Client
-Au démarrage les clients reçoivent la bienvenue du serveur sous cette forme:
+Au démarrage, les clients reçoivent la bienvenue du serveur sous cette forme:
 
-` Welcome in the FH Hotel ! Nb rooms: 10, nb nights: 10 ` <br>
+` Welcome in the FH Hostel ! Nb rooms: 10, nb nights: 10 ` <br>
 `Available commands:` <br>
 `-  LOGIN userName` <br>
 `-  LOGOUT` <br>
@@ -51,34 +56,33 @@ Au démarrage les clients reçoivent la bienvenue du serveur sous cette forme:
 `-  FREEROOM arrivalNight nbNights` <br>
 
 > Remarquez:
->* le nombre de chambre supportées, ici de 1 à 10.
->* le nombre de nuits supportées, ici de 1 à 10.
->* la liste des commandes, ici LOGIN, LOGOUT, BOOK, ROOMLIST et FREEROOM.
+>* le nombre de chambre supportées: de 1 à 10.
+>* le nombre de nuits supportées: de 1 à 10.
+>* la liste des commandes: LOGIN, LOGOUT, BOOK, ROOMLIST et FREEROOM.
 
 ### LOGIN
 ` LOGIN <userName>`</br>
-Première commande à effectuer. Les autres commandes ne fonctionnement pas tant que login avec un nom d'utilisateur n'a pas été exécutée. Les noms d'utilisateur sont supposés unique. En conséquence, deux utilisateurs avec le même nom ne devraient pas se connecter simultanément.
+Première commande à effectuer. Les autres commandes ne fonctionnement pas tant que l'authentification avec un nom d'utilisateur n'a pas été exécutée. Les noms d'utilisateur sont supposés unique. En conséquence, deux utilisateurs avec le même nom ne doivent pas s'authentifier simultanément.
 
 En cas de succès, l'utilisateur reçoit:
 > `Login success` </br>
 
-sinon il reçoit un message d'erreur avec une explication.
-
+Sinon il reçoit un message d'erreur avec une explication.
 
 ### BOOK
 ` BOOK roomNumber arrivalNight nbNights` <br>
-Cette commande sert à réserver une chambre de numéro <i>roomNumber</i> à partir de la nuit <i>arrivalNight</i> durant un nombre de nuit <i>nbNights</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
+Cette commande sert à réserver une chambre de numéro <i>roomNumber</i> à partir de la nuit <i>arrivalNight</i> durant un nombre de nuits <i>nbNights</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
 
-Si la commande `BOOK 1 2 3` est effectuée avec succès, le client reçoit:
+Si la commande `BOOK 1 2 3` est effectuée avec succès, l'utilisateur reçoit:
 >`You successfully booked room  1  for  3  night(s), starting night 2`
 
-sinon il reçoit un message d'erreur avec une explication.
+Sinon il reçoit un message d'erreur avec une explication.
 
 ### ROOMLIST 
 ` ROOMLIST night` <br>
-Cette commande permet de voir l'état des chambres dans l'hotel pour une nuit donnée <i>night</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
+Cette commande permet de voir l'état des chambres dans l'hôtel pour une nuit donnée <i>night</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
 
-Si la commande `ROOMLIST 2` est effectuée avec succès, le client reçoit:
+Si la commande `ROOMLIST 2` est effectuée avec succès, l'utilisateur reçoit:
 >`ROOMLIST 2` <br>
 `Room no : state` <br>
 `1  :  Self reserved` <br>
@@ -92,58 +96,58 @@ Si la commande `ROOMLIST 2` est effectuée avec succès, le client reçoit:
 `9  :  Free` <br>
 `10  :  Free` <br>
 
-> Pour la nuit 2, nous apperçevons que toutes le chambres sont libres sauf la chambre 1, réservée par le client lui même, et la chambre 4, réservée par un autre client.
+> Pour la nuit 2, nous apperçevons que toutes les chambres sont libres sauf la chambre 1, réservée par l'utilisateur lui même, et la chambre 4, réservée par un autre utilisateur.
 
-sinon il reçoit un message d'erreur avec une explication.
+Sinon il reçoit un message d'erreur avec une explication.
 
 ### FREEROOM
 `FREEROOM arrivalNight nbNights` <br>
-Cette commande permet de chercher la première chambre libre à partir d'une nuit <i>arrivalNight</i> pendant un nombre de nuit <i>nbNights</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
+Cette commande permet de chercher la première chambre libre à partir d'une nuit <i>arrivalNight</i> pendant un nombre de nuits <i>nbNights</i>. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
 
-Si la commande FREEROOM 2 1 est effectuée avec succès, le client reçoit:
+Si la commande FREEROOM 2 1 est effectuée avec succès, l'utilisateur reçoit:
 >`Room  2  is free from night  2  during  1  night(s).`
 
 > Effectuée au moment du résultat de l'exécution de <i>ROOMLIST</i> précédent.
 
-si aucune chambre est disponible, le client reçoit:
+Si aucune chambre est disponible, l'utilisateur reçoit:
 > `No rooms free from night  2  for  1  night(s).`
 
-sinon il reçoit un message d'erreur avec une explication.
+Sinon il reçoit un message d'erreur avec une explication.
 
 ### LOGOUT
 ` LOGOUT`</br>
-Cette commande permet à un utilisateur de se déconnecter. Cette commande est disponible seulement après un <i>LOGIN</i> avec succès.
+Cette commande permet à un utilisateur de se déconnecter. Cette commande est disponible seulement après un <i>LOGIN</i> réussi.
 
 En cas de succès, l'utilisateur reçoit:
 > `Logout success` </br>
 
-sinon il reçoit un message d'erreur avec une explication.
+Sinon il reçoit un message d'erreur avec une explication.
 
 # Compatibilité
-L'application a été testée est validée sous Windows et Linux.
+L'application a été testée et validée sous les environnements Windows et Linux.
 
-La compatibilité MacOS n'a pas pu être contrôlée mais devrait être compatible. Seules des fonctionnalités de base de Golang ont été utilisée.
+La compatibilité MacOS n'a pas pu être contrôlée mais devrait être possible. Seules les fonctionnalités de base de Golang ont été utilisées.
 
 # Protocole de communication TCP
 ## Comment le client trouve le serveur (adresses et ports)?
-Le serveur utilise sont adresse localhost et le port 8000
+Le serveur utilise son adresse localhost et le port 8000.
 
 ## Qui parle en premier ? 
-Le serveur parle en premier.</br>
-Un message de bienvenue suivi d'une liste de commandes est envoyé au client lorsque le client parvient à se connecter au serveur.
+Le serveur parle en premier lorsque le client parvient à se connecter au serveur.</br>
+Il envoie un message de bienvenue ainsi qu'une liste de commandes.
 
 ## Qui ferme la connexion et quand?
-Le client ferme la connexion lorsque il termine son exécution.
+Le client ferme la connexion lorsqu'il termine son exécution.
 
 ## Qu'est ce qui se passe quand un message est reçu?
 ### Serveur
 Le serveur récupère le premier mot de la requête. Si le mot est syntaxiquement:
-* Inconnu: renvoie une erreur.
-* Connu: tente de former la suite de la requête.
+* Inconnu: Envoie une erreur.
+* Connu: Tente de former la suite de la requête.
 
 Si la requête peut être formée:
 * Execute et retourne le résultat.
-* Sinon retourne une erreur.
+* Sinon envoie une erreur.
 
 
 ### Client
@@ -167,7 +171,7 @@ Le client récupère le premier mot de la réponse. Il détermine si c'est:
 | Réponse positive à BOOK | RESULT_BOOK {numéro de chambre} {nuit d'arrivée} {nombre de nuits} CRLF  |
 | Réponse positive à ROOMLIST | RESULT_ROOMLIST {état chambre1}, {état chambre2} ...  CRLF  |
 | Réponse positive à FREEROOM | RESULT_FREEROOM {no chambre libre ou 0} CRLF |
-| Réponse positive à LOGOUT | RESULT_LOGOUT {numéro de chambre/0} {nuit d'arrivée} {nombre de nuits} CRLF |
+| Réponse positive à LOGOUT | RESULT_LOGOUT {numéro de chambre ou 0} {nuit d'arrivée} {nombre de nuits} CRLF |
 | Erreur | ERROR {message} CRLF |
 
 ## Exemple d'une conversation entre client et serveur tcp
@@ -205,14 +209,14 @@ Server : <br>
 `RESULT_LOGOUT CRLF`
 
 # Debug de la concurrence
-Comme présenté dans la rubrique "Installation", le serveur peut être lancé en mode debug grâce au paraètre "-debug". Ce mode de fonctionnement affiche les événements dans la console. De plus, à chaque fois que deux utilisateurs sont connectés(login) avec succès, la goroutine qui gère les ressources partagées se met en pause pendant 20 secondes dans le but de laisser suffisament de temps pour créer une situation de concurrence. 
+Comme présenté dans la rubrique "Installation", le serveur peut être lancé en mode debug grâce au paramètre "-debug". Ce mode de fonctionnement affiche les événements dans la console. De plus, à chaque fois que deux utilisateurs sont connectés(login) avec succès, la goroutine qui gère les ressources partagées se met en pause pendant 20 secondes dans le but de laisser suffisament de temps pour créer une situation de concurrence. 
 
 ## Distinctions
 Il existe deux types de log:
-* RISK: log une requête effectuée dans la zone partagée (goroutine gérant l'hotel, hostelManager).
+* RISK: log une requête effectuée dans la zone partagée (goroutine gérant l'hôtel, hostelManager).
 * SAFE: log une réception ou un envoi depuis/vers le client (goroutine gérant la communication avec les clients, clientHandler). Ce type de log peut apparaître au milieu d'un passage en zone concurrente sans souci.
 
-Théoriquement, pour une bonne gestion de la concurrence, les logs qui indiquent un passage (entrée puis sortie) en zone partagé ne doivent pas se chevaucher.
+Théoriquement, pour une bonne gestion de la concurrence, les logs qui indiquent un passage (entrée puis sortie) en zone partagé ne doivent pas se chevaucher et traîtent une unique requête.
 
 __Correct__ \
 `1 DEBUG >>  RISK)  --------- Enter shared zone ---------`\
@@ -222,9 +226,9 @@ __Correct__ \
 `5 DEBUG >>  RISK) --------- Leave shared zone ---------`
 
 
-> Ligne 1, nous voyons que la goroutine gérant les accès concurrants est entrée en zone partagée, prête à traiter la prochaine demande concurrente. Ensuite en ligne 2, par le prefix SAFE nous voyons que le client 127.0.0.1:5155 a envoyé la requête BOOK 1 1 1 et que sa goroutine dédiée a reçu sa requête. Ligne 3, nous voyons que la requête a été transmise et que la goroutine qui gère l'hotel la traite.
-Finalement ligne 4 et 5, le traitement est terminé et la zone concurrente est quittée.
-Cet exemple montre un cas d'exécution correct. Il n'y a qu'une exécution au sein du même passage en zone critique. En d'autre terme aucune nouvelle entrée en section critique est effectuée tant que la première n'est pas sortie.
+> Ligne 1, nous voyons que la goroutine gérant les accès concurrents est entrée en zone partagée, prête à traiter la prochaine demande. Ensuite en ligne 2, par le préfix SAFE nous voyons que le client 127.0.0.1:5155 a envoyé la requête BOOK 1 1 1 et que sa goroutine dédiée a reçu sa requête. Ligne 3, nous voyons que la requête a été transmise et que la goroutine qui gère l'hôtel traite la demande.
+Finalement lignes 4 et 5, le traitement est terminé et la zone concurrente est quittée.
+Cet exemple montre un cas d'exécution correct. Il n'y a qu'une exécution au sein du même passage en zone critique. De plus, aucune nouvelle entrée en section critique est effectuée tant que la première n'est pas sortie.
 
 __Faux__ \
 `1  DEBUG >>  RISK)  --------- Enter shared zone --------- `\
@@ -238,7 +242,7 @@ __Faux__ \
 `9  DEBUG >>  RISK) --------- Leave shared zone ---------` \
 `10 DEBUG >>  RISK) --------- Leave shared zone ---------`
 
-> Contrairement à l'exemple précédent, celui-ci montre un cas qui ne doit pas avoir lieu. Nous pouvons voir que deux traitements critiques ont été executé en même temps. En effet, une entrée en zone partagée a été effectuée alors que la précédente entrée n'a pas terminé. Les lignes 2,7,8 et 10 devraient être exécutées après les lignes 1,5,6 et 9.
+> Contrairement à l'exemple précédent, celui-ci montre un cas qui ne doit pas arriver. Nous pouvons voir que deux traitements critiques ont été executés en même temps. En effet, une entrée en zone partagée a été effectuée alors que la précédente entrée n'a pas terminé son traitement. Les lignes 2,7,8 et 10 devraient être exécutées après les lignes 1,5,6 et 9.
 
 ## Vérification manuelle
 
@@ -309,6 +313,6 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 
 >__Ligne 27)__ Attente d'un nouveau traitement concurrent.
 
->__Ligne 28-29)__ Envoi des réponse aux clients.
+>__Ligne 28-29)__ Envoi des réponses aux clients.
 
 Comme nous pouvons le voir, aucune entrée en zone partagée n'est effectuée tant que l'entrée précédente n'est pas terminée. Chaque entrée partagée contient le traitement d'une seule requête. En conclusion, la gestion des accès concurrents est correcte.
