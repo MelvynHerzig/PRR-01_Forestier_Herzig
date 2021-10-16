@@ -13,10 +13,10 @@ import (
 
 // StartClient connects to the server. This function goroutine reads from user and another goroutine reads from
 // server. This loops until application is shutdown or connection closed.
-func StartClient() {
+func StartClient(servAddress string) {
 
 	// Connection
-	conn, err := net.Dial("tcp", "localhost:8000")
+	conn, err := net.Dial("tcp", servAddress + ":8000")
 	if err != nil {
 		log.Fatal(err)
 	}

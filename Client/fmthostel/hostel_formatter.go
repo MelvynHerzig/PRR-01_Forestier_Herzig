@@ -1,6 +1,6 @@
 // Package fmthostel is responsible to read hostel server responses and format them for user.
-// Good response start with RESULT_<COMMAND ANSWERED>.
-// Errors response start with ERROR
+// Good response starts with RESULT_<COMMAND ANSWERED>.
+// Error response starts with ERROR
 package fmthostel
 
 import (
@@ -98,7 +98,7 @@ func displayFreeroom(splitResponse string) {
 	if args[0] == "0" {
 		fmt.Println("No rooms free from night ", args[1], " for ", args[2], " night(s).")
 	} else {
-		fmt.Println("Room  ", args[0], " is free from night ", args[1], " during ", args[2], " night(s).")
+		fmt.Println("Room ", args[0], " is free from night ", args[1], " during ", args[2], " night(s).")
 	}
 }
 

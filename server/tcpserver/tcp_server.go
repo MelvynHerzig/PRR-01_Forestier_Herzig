@@ -1,7 +1,6 @@
-// Package tcpserver implements the Server TCP logic.
-// The tcp_server.go file is responsible for TCP "worker" and
-// the request.go file is responsible for requests that can
-// be submitted to the job logic layer.
+// Package tcpserver implements server side tcp logic.
+// It handles each client on a specific goroutine and manages access to hostel
+// rooms
 package tcpserver
 
 import (
@@ -14,6 +13,16 @@ import (
 	"strings"
 )
 
+// saveNbRooms stores the nbRooms passed to StartServer. Thus, clienHandler can indicate how many rooms the hostel has.
+// No race protection needed because this is initialized in StartServer and read only in clientHandler that is
+// running after StartServer call.
+var strNbRooms string
+
+// saveBbRooms stores the nbNights passed to StartServer. Thus, clienHandler can indicate how many night the hostel supports.
+// No race protection needed because this is initialized in StartServer and read only in clientHandler that is
+// running after StartServer call.
+var strNbNights string
+
 // StartServer Launch TCP Server, starts client handler goroutine and hostel logic goroutine.
 func StartServer(nbRooms, nbNights uint) {
 
@@ -24,7 +33,9 @@ func StartServer(nbRooms, nbNights uint) {
 	}
 
 	// Starting concurrent hostel manager.
-	go hostelManager(uint(nbRooms), uint(nbNights))
+	go hostelManager(nbRooms, nbNights)
+	strNbRooms = strconv.FormatUint(uint64(nbRooms), 10)
+	strNbNights = strconv.FormatUint(uint64(nbNights), 10)
 
 	// Listening for TCP connections.
 	for {
@@ -65,13 +76,21 @@ func hostelManager(nbRooms, nbNights uint) {
 	for {
 
 		if DebugMode {
-			debugModeLog("--------- Enter shared zone ---------")
+			debugLogRisk("--------- Enter shared zone ---------")
 		}
 
 		select {
 		case request := <-requests:
 
-			request.execute(hostelManager, clients)
+			if DebugMode {
+				debugLogRequestHandling(request)
+			}
+
+			success :=  request.execute(hostelManager, clients)
+
+			if DebugMode {
+				debugLogRequestResult(request, success)
+			}
 
 		case cli := <-leaving:
 			delete(clients, cli)
@@ -79,7 +98,7 @@ func hostelManager(nbRooms, nbNights uint) {
 		}
 
 		if DebugMode {
-			debugModeLog("--------- Leave shared zone ---------")
+			debugLogRisk("--------- Leave shared zone ---------")
 		}
 	}
 }
@@ -93,28 +112,28 @@ func handleConnection(conn net.Conn) {
 		for msg := range ch { // client writer <- hostelManager / handleConnection
 
 			if DebugMode {
-				debugModeLog("To " + conn.RemoteAddr().String() + " : " + msg)
+				debugLogSafe("To " + conn.RemoteAddr().String() + " : " + msg)
 			}
 
 			_, _ = fmt.Fprintln(conn, msg) // TCP Client <- client writer
 		}
 	}()
 
-	ch <- "WELCOME Welcome in the FH Hotel !" +
-		"- LOGIN userName" +
+	ch <- "WELCOME Welcome in the FH Hotel ! Nb rooms: "  + strNbRooms + ", nb nights: " + strNbNights +
+		"- LOGIN <userName>" +
 		"- LOGOUT" +
-		"- BOOK roomNumber arrivalNight nbNights" +
-		"- ROOMLIST night" +
-		"- FREEROOM arrivalNight nbNights"
+		"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
+		"- ROOMLIST <night>" +
+		"- FREEROOM <arrivalNight> <nbNights>"
 
 	// Scanning incoming client message.
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
 
-		goodRequest, req := makeUserRequest(input.Text(), ch)
+		goodRequest, req := makeUserRequest(conn.RemoteAddr().String(), input.Text(), ch)
 
 		if DebugMode {
-			debugModeLog("From " + conn.RemoteAddr().String() + " : " + input.Text())
+			debugLogSafe("From " + conn.RemoteAddr().String() + " : " + input.Text())
 		}
 
 		if goodRequest {
@@ -130,7 +149,7 @@ func handleConnection(conn net.Conn) {
 
 // makeUserRequest analyzes incoming message to create request to hostel manager.
 // Clients request must contain the exact amount of arguments.
-func makeUserRequest(req string, ch client) (bool, hostelRequestable) {
+func makeUserRequest(clientAddr, req string, ch client) (bool, hostelRequestable) {
 
 	trimReq := strings.TrimSpace(req)
 	splits := strings.Split(trimReq, " ")
@@ -142,12 +161,14 @@ func makeUserRequest(req string, ch client) (bool, hostelRequestable) {
 		}
 		var req loginRequest
 		req.chanToHandler = ch
+		req.clientAddr = clientAddr
 		req.clientName = splits[1]
 		return true, &req
 
 	case "LOGOUT":
 		var req logoutRequest
 		req.chanToHandler = ch
+		req.clientAddr = clientAddr
 		return true, &req
 
 	case "BOOK":
@@ -156,6 +177,7 @@ func makeUserRequest(req string, ch client) (bool, hostelRequestable) {
 		}
 		var req bookRequest
 		req.chanToHandler = ch
+		req.clientAddr = clientAddr
 
 		roomNumber, err1 := strconv.ParseUint(splits[1], 10, 0)
 		arrivalNight, err2 := strconv.ParseUint(splits[2], 10, 0)
@@ -176,6 +198,7 @@ func makeUserRequest(req string, ch client) (bool, hostelRequestable) {
 		}
 		var req roomStateRequest
 		req.chanToHandler = ch
+		req.clientAddr = clientAddr
 
 		night, err := strconv.ParseUint(splits[1], 10, 0)
 		if err != nil {
@@ -192,6 +215,7 @@ func makeUserRequest(req string, ch client) (bool, hostelRequestable) {
 		}
 		var req disponibilityRequest
 		req.chanToHandler = ch
+		req.clientAddr = clientAddr
 
 		arrivalNight, err1 := strconv.ParseUint(splits[1], 10, 0)
 		nbNights  , err2 := strconv.ParseUint(splits[2], 10, 0)

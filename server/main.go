@@ -1,3 +1,4 @@
+// Package main starts the hostel server manager
 package main
 
 import (
