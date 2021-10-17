@@ -5,6 +5,7 @@ package tcpclient
 import (
 	"Client/fmthostel"
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -30,6 +31,7 @@ func StartClient(servAddress string) {
 		input := bufio.NewScanner(conn)
 		for input.Scan() {
 			fmthostel.FetchDisplayResponse(input.Text())
+			fmt.Print("> ")
 		}
 
 		log.Println("done")

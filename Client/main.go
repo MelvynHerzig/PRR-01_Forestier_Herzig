@@ -1,6 +1,7 @@
 package main
 
-import ( "Client/tcpclient"
+import (
+	"Client/tcpclient"
 	"log"
 	"os"
 )
