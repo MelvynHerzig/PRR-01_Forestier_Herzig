@@ -1,3 +1,4 @@
+// Tests some requests to send to the server.
 package main
 
 import (
@@ -13,6 +14,7 @@ import (
 var conn net.Conn
 var reader *bufio.Reader
 
+// setupSuite Setup the tests environment. Start the server and create the tcp connection.
 func setupSuite(tb testing.TB) func(tb testing.TB) {
 	log.Println("Setup suite")
 
@@ -44,6 +46,7 @@ func setupSuite(tb testing.TB) func(tb testing.TB) {
 	}
 }
 
+// TestServerRequest Main test. Setup test suite and then launch every tests
 func TestServerRequest(t *testing.T) {
 	teardownSuite := setupSuite(t)
 
@@ -118,7 +121,7 @@ func TestServerRequest(t *testing.T) {
 
 		{"BOOK room already booked", "BOOK 1 1 1", "ERROR"},
 
-		{"LOGOUT SUCESSFULL", "LOGOUT", "RESULT_LOGOUT"},
+		{"LOGOUT SUCESSFUL", "LOGOUT", "RESULT_LOGOUT"},
 		{"LOGIN as other user", "LOGIN Melvyn", "RESULT_LOGIN"},
 
 		{"ROOMLIST with room1 booked by someone", "ROOMLIST 1", "Occupied,Free"},
