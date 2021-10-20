@@ -1,29 +1,28 @@
 // Package tcpserver implements server side tcp logic.
-// It handles each client on a specific goroutine and manages access to hostel
-// rooms
+// It handles each client on a specific goroutine and manages access to hostel rooms.
 package tcpserver
 
 import (
-	"Server/hostel"
 	"bufio"
 	"fmt"
 	"log"
 	"net"
+	"server/hostel"
 	"strconv"
 	"strings"
 )
 
-// saveNbRooms stores the nbRooms passed to StartServer. Thus, clienHandler can indicate how many rooms the hostel has.
-// No race protection needed because this is initialized in StartServer and read only in clientHandler that is
+// strNbRooms stores the nbRooms passed to StartServer. Thus, clienHandler can indicate how many rooms the hostel has.
+// No race protection needed because this is set once in StartServer and read only in clientHandler that is
 // running after StartServer call.
 var strNbRooms string
 
-// saveBbRooms stores the nbNights passed to StartServer. Thus, clienHandler can indicate how many night the hostel supports.
-// No race protection needed because this is initialized in StartServer and read only in clientHandler that is
+// strNbNights stores the nbNights passed to StartServer. Thus, clienHandler can indicate how many night the hostel supports.
+// No race protection needed because this is set once in StartServer and read only in clientHandler that is
 // running after StartServer call.
 var strNbNights string
 
-// StartServer Launch TCP Server, starts client handler goroutine and hostel logic goroutine.
+// StartServer launches TCP Server, starts client handler goroutine and hostel logic goroutine.
 func StartServer(nbRooms, nbNights uint) {
 
 	// Opening TCP Server.
@@ -50,7 +49,7 @@ func StartServer(nbRooms, nbNights uint) {
 	}
 }
 
-// client to server message channel.
+// client to server messages channel.
 type client chan<- string
 
 var (

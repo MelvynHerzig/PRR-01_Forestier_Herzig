@@ -3,8 +3,8 @@
 package tcpclient
 
 import (
-	"Client/fmthostel"
 	"bufio"
+	"client/fmthostel"
 	"fmt"
 	"io"
 	"log"

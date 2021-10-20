@@ -3,7 +3,7 @@
 package tcpserver
 
 import (
-	"Server/hostel"
+	"server/hostel"
 	"strconv"
 	"time"
 )

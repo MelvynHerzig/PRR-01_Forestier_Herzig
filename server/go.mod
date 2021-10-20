@@ -1,3 +1,3 @@
-module Server
+module server
 
 go 1.17

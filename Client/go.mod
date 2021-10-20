@@ -1,3 +1,3 @@
-module Client
+module client
 
 go 1.17

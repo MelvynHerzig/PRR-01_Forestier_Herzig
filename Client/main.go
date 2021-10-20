@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Client/tcpclient"
+	"client/tcpclient"
 	"log"
 	"os"
 )

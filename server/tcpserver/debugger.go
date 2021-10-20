@@ -5,16 +5,16 @@ import "fmt"
 
 // DebugMode enables debug mode if set to true.
 // Debug mode consist of logging server actions and sleeping 20s when 2 clients logs in, in order to
-// let enough time to create a race condition.
+// let enough time to create a "race" condition.
 var DebugMode = false
 
 // Number of logged client. It is race safe since incremented and decremented in loginRequest.execute
-// and logoutRequest.execute. All this, because the execute methodes are handled in hostelManager function
+// and logoutRequest.execute. All this, because the execute methods are handled in hostelManager function
 // that respects Communicating Sequential Processes.
 var nbLoggedClient = 0
 
 
-// debugLogSafe prefix message with RISK which means that this log is executed from a critical zone.
+// debugLogRisk prefix message with RISK which means that this log is executed from a critical zone.
 func debugLogRisk(message string) {
 	debugLog("RISK) " + message)
 }
@@ -24,7 +24,7 @@ func debugLogSafe(message string) {
 	debugLog("SAFE) " + message)
 }
 
-// debugLog logs the message.
+// debugLog logs the message with DEBUG >> prefix.
 func debugLog(message string) {
 	fmt.Println("DEBUG >> ", message)
 }
@@ -38,7 +38,7 @@ func debugLogRequestResult (request hostelRequestable, success bool) {
 	}
 }
 
-// debugLogRequestStart logs that request handle is starting.
+// debugLogRequestHandling  logs that request handle is starting.
 func debugLogRequestHandling (request hostelRequestable) {
 	debugLogRisk(request.toString() + " HANDLING ")
 }

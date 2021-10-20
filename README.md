@@ -28,10 +28,10 @@ Respository du laboratoire 01 pour le cours PRR
 
 > Depuis le dossier <i>client</i>.
 >
-> Pour lancer un client qui se connecte à un serveur sur la même machine.
+> Pour lancer un client qui se connecte à un serveur sur la même machine.\
 > `$ go run . localhost`
 >
-> Pour lancer un client qui se connecte à un serveur à l'adresse 1.2.3.4
+> Pour lancer un client qui se connecte à un serveur à l'adresse 1.2.3.4\
 > `$ go run . 1.2.3.4`
 
 # Utilisation
@@ -42,7 +42,7 @@ __Ne fonctionne pas__\
 Rien
 
 ## Serveur
-Une fois le serveur lancé, aucune action supplémentaire nécessaire.
+Une fois le serveur lancé, aucune action supplémentaire est nécessaire.
 
 ## Client
 Au démarrage, les clients reçoivent la bienvenue du serveur sous cette forme:
@@ -56,7 +56,7 @@ Au démarrage, les clients reçoivent la bienvenue du serveur sous cette forme:
 `-  FREEROOM arrivalNight nbNights` <br>
 
 > Remarquez:
->* le nombre de chambre supportées: de 1 à 10.
+>* le nombre de chambres supportées: de 1 à 10.
 >* le nombre de nuits supportées: de 1 à 10.
 >* la liste des commandes: LOGIN, LOGOUT, BOOK, ROOMLIST et FREEROOM.
 
@@ -96,7 +96,7 @@ Si la commande `ROOMLIST 2` est effectuée avec succès, l'utilisateur reçoit:
 `9  :  Free` <br>
 `10  :  Free` <br>
 
-> Pour la nuit 2, nous apperçevons que toutes les chambres sont libres sauf la chambre 1, réservée par l'utilisateur lui même, et la chambre 4, réservée par un autre utilisateur.
+> Pour la nuit 2, nous appercevons que toutes les chambres sont libres sauf la chambre 1, réservée par l'utilisateur lui même, et la chambre 4, réservée par un autre utilisateur.
 
 Sinon il reçoit un message d'erreur avec une explication.
 
@@ -133,7 +133,7 @@ La compatibilité MacOS n'a pas pu être contrôlée mais devrait être possible
 Le serveur utilise son adresse localhost et le port 8000.
 
 ## Qui parle en premier ? 
-Le serveur parle en premier lorsque le client parvient à se connecter au serveur.</br>
+Le serveur parle en premier lorsque le client parvient à se connecter.</br>
 Il envoie un message de bienvenue ainsi qu'une liste de commandes.
 
 ## Qui ferme la connexion et quand?
@@ -142,12 +142,12 @@ Le client ferme la connexion lorsqu'il termine son exécution.
 ## Qu'est ce qui se passe quand un message est reçu?
 ### Serveur
 Le serveur récupère le premier mot de la requête. Si le mot est syntaxiquement:
-* Inconnu: Envoie une erreur.
-* Connu: Tente de former la suite de la requête.
+* Inconnu: Envoie une erreur. (context non concurrent)
+* Connu: Tente de former la suite de la requête. (context non concurrent)
 
 Si la requête peut être formée:
-* Execute et retourne le résultat.
-* Sinon envoie une erreur.
+* Execute et retourne le résultat. (context concurrent)
+* Sinon envoie une erreur. (context non concurrent)
 
 
 ### Client
@@ -208,15 +208,24 @@ Client : <br>
 Server : <br>
 `RESULT_LOGOUT CRLF`
 
+## Tests
+Un program de tests a été mis en place. Le programme de test se
+comporte comme un seul client. Toutes les requêtes au serveur sont testées avec leurs retours
+positifs (pas d’erreurs) et négatifs (paramètres incorrects, indisponibilités, …). 
+Le programme de test lance un serveur automatiquement, ainsi pour que l'exécution
+se déroule correctement, il ne faut pas avoir executé `$go run .` avant de lancer les tests.
+
+Pour lancer les tests, depuis le dossier <i>server</i>, exécuter la commande: `$go test -v`
+
 # Debug de la concurrence
-Comme présenté dans la rubrique "Installation", le serveur peut être lancé en mode debug grâce au paramètre "-debug". Ce mode de fonctionnement affiche les événements dans la console. De plus, à chaque fois que deux utilisateurs sont connectés(login) avec succès, la goroutine qui gère les ressources partagées se met en pause pendant 20 secondes dans le but de laisser suffisament de temps pour créer une situation de concurrence. 
+Comme présenté dans la rubrique "Installation", le serveur peut être lancé en mode debug grâce au paramètre "-debug". Ce mode de fonctionnement affiche les événements dans la console. De plus, à chaque fois que deux utilisateurs sont connectés (login) avec succès, la goroutine qui gère les ressources partagées se met en pause pendant 20 secondes dans le but de laisser suffisament de temps pour créer une situation de concurrence. 
 
 ## Distinctions
 Il existe deux types de log:
 * RISK: log une requête effectuée dans la zone partagée (goroutine gérant l'hôtel, hostelManager).
-* SAFE: log une réception ou un envoi depuis/vers le client (goroutine gérant la communication avec les clients, clientHandler). Ce type de log peut apparaître au milieu d'un passage en zone concurrente sans souci.
+* SAFE: log une réception ou un envoi depuis/vers le client (goroutine gérant la communication spécifique à chaque client, clientHandler). Ce type de log peut apparaître au milieu d'un passage en zone concurrente sans problème.
 
-Théoriquement, pour une bonne gestion de la concurrence, les logs qui indiquent un passage (entrée puis sortie) en zone partagé ne doivent pas se chevaucher et traîtent une unique requête.
+Théoriquement, pour une bonne gestion de la concurrence, les logs qui indiquent un passage (entrée puis sortie) en zone partagé ne doivent pas se chevaucher.
 
 __Correct__ \
 `1 DEBUG >>  RISK)  --------- Enter shared zone ---------`\
@@ -255,7 +264,7 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 `$go run . localhost` (A) \
 `$go run . localhost` (B)
 
-* Identifier les clients\
+* Identifier les clients
   * A \
   `LOGIN melvyn`
   * B \
@@ -305,7 +314,7 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 `29 DEBUG >>  SAFE) To 127.0.0.1:13124 : ERROR room already booked ` \
 
 
-> __Lignes 1-18)__ Ces lignes montrent l'enchaînement des appelles lorsque les deux clients se connectent au serveur et que les deux utilisateurs s'authentifient. Comme annoncé, lorsque deux utilisateurs sont authentifiés, la go routine de traîtement des requêtes se met en pause, c'est ce que nous voyons en ligne 12. Ensuite, les deux clients envoient la même requête. Les lignes 13 et 14 indiquent que les goroutines qui communiquent avec les clients ont bien reçu leur requête. La ligne 16 indique la reprise de la goroutine de traitement. Finalement, les lignes 17 et 18 terminent le traitement du login du client 127.0.0.1:13124. 
+> __Lignes 1-18)__ Ces lignes montrent l'enchaînement des appels lorsque les deux clients se connectent au serveur et que les deux utilisateurs s'authentifient. Comme annoncé, lorsque deux utilisateurs sont authentifiés, la go routine de traîtement des requêtes se met en pause, c'est ce que nous voyons en ligne 12. Ensuite, les deux clients envoient la même requête. Les lignes 13 et 14 indiquent que les goroutines qui communiquent avec les clients ont bien reçu leur requête. La ligne 16 indique la reprise de la goroutine de traitement. Finalement, les lignes 17 et 18 terminent le traitement du login du client 127.0.0.1:13124. 
 
 >__Lignes 19-22)__ La requête BOOK du client 127.0.0.1:13120 est traitée.
 
@@ -316,3 +325,11 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 >__Ligne 28-29)__ Envoi des réponses aux clients.
 
 Comme nous pouvons le voir, aucune entrée en zone partagée n'est effectuée tant que l'entrée précédente n'est pas terminée. Chaque entrée partagée contient le traitement d'une seule requête. En conclusion, la gestion des accès concurrents est correcte.
+
+## go race
+L'application a passé le test du go race.
+
+La procédure précédente (Debug de la concurrence -> vérification manuelle) a été exécutée en démarrant le serveur avec l'argument <i>-race</i>. 
+> `$ go run -race . 10 10 -debug`
+
+Aucune concurrence n'a été détectée.

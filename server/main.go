@@ -2,10 +2,10 @@
 package main
 
 import (
-	"Server/tcpserver"
 	"fmt"
 	"log"
 	"os"
+	"server/tcpserver"
 	"strconv"
 )
 

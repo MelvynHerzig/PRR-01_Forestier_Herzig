@@ -5,18 +5,15 @@ import "errors"
 
 // Hostel This struct if the base struct defining a hostel.
 type Hostel struct {
-	rooms     [][]uint
-	clients   map[string]uint
+	rooms     [][]uint        // 0 freeRoom else client id
+	clients   map[string]uint // name -> id from [0, max uint]
 	nbClients uint
 	nbRooms   uint
 	nbNights  uint
 }
 
-// free if a room value at a given night is 0, the room is not booked.
-const free = 0
-
-// clientStartId client id starts at value 1 since 0 means room is not booked.
-const clientStartId = 1
+// freeRoom is the constant value stored in rooms to declare that the room is free.
+const freeRoom = 0
 
 // NewHostel creates a new hostel for a given amount of rooms and nights.
 func NewHostel(nbRooms, nbNights uint) (*Hostel, error) {
@@ -43,7 +40,7 @@ func NewHostel(nbRooms, nbNights uint) (*Hostel, error) {
 func (h *Hostel) TryRegister(name string) {
 
 	if _, ok := h.clients[name]; ok == false {
-		h.clients[name] = clientStartId + h.nbClients
+		h.clients[name] = 1 + h.nbClients // 1 + because client's id start from 1
 		h.nbClients++
 	}
 }
@@ -67,7 +64,7 @@ func (h *Hostel) Book(name string, noRoom, nightStart, duration uint) error {
 
 	// Room free during booking time ?
 	for night := nightStart; night < nightStart+duration; night++ {
-		if h.rooms[noRoom-1][night-1] != free {
+		if h.rooms[noRoom-1][night-1] != freeRoom {
 			return errors.New("room already booked")
 		}
 	}
@@ -102,7 +99,7 @@ func (h *Hostel) GetRoomsState(name string, noNight uint) ([]string, error) {
 	for room := uint(0); room < h.nbRooms; room++ {
 
 		switch h.rooms[room][noNight- 1] {
-		case 0:
+		case freeRoom:
 			roomsState[room] = "Free"
 		case clientId:
 			roomsState[room] = "Self reserved"
@@ -127,7 +124,7 @@ func (h *Hostel) SearchDisponibility(nightStart, duration uint) (uint, error) {
 		free := true
 
 		for night := nightStart; night < nightStart+duration; night++ {
-			if h.rooms[room][night-1] != 0 {
+			if h.rooms[room][night-1] != freeRoom {
 				free = false
 			}
 		}

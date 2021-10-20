@@ -71,7 +71,7 @@ func displayLogoutSuccess() {
 	fmt.Println("Logout success")
 }
 
-// displayError prints booking summary confirmation.
+// displayBook prints booking summary confirmation.
 func displayBook(splitResponse string) {
 	args := strings.Split(splitResponse, " ")
 
@@ -89,8 +89,7 @@ func displayRoomlist(splitResponse string) {
 	}
 }
 
-// displayRoomlist prints the free room found.
-// displayRoomlist prints the free room found.
+// displayFreeroom prints the free room found.
 func displayFreeroom(splitResponse string) {
 
 	args := strings.Split(splitResponse, " ")

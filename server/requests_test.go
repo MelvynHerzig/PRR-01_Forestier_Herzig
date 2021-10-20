@@ -2,11 +2,11 @@
 package main
 
 import (
-	"Server/tcpserver"
 	"bufio"
 	"fmt"
 	"log"
 	"net"
+	"server/tcpserver"
 	"strings"
 	"testing"
 )
@@ -14,7 +14,7 @@ import (
 var conn net.Conn
 var reader *bufio.Reader
 
-// setupSuite Setup the tests environment. Start the server and create the tcp connection.
+// setupSuite setups the tests environment. Starts the server and creates the tcp connection.
 func setupSuite(tb testing.TB) func(tb testing.TB) {
 	log.Println("Setup suite")
 
@@ -39,14 +39,13 @@ func setupSuite(tb testing.TB) func(tb testing.TB) {
 	reader.ReadString('\n')
 
 
-
 	return func(tb testing.TB) {
 		log.Println("Teardown suite")
 		conn.Close()
 	}
 }
 
-// TestServerRequest Main test. Setup test suite and then launch every tests
+// TestServerRequest is the main test. Setup test suite and then launch every tests
 func TestServerRequest(t *testing.T) {
 	teardownSuite := setupSuite(t)
 
