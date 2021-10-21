@@ -4,21 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dac421f1-2b8a-4de0-b50b-d31e6ab1a2be" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Client.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Client.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcpclient/tcp_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcpclient/tcp_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/../server/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/requests_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/requests_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/debugger.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/debugger.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/request.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/tcp_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/tcp_server.go" afterDir="false" />
-    </list>
+    <list default="true" id="dac421f1-2b8a-4de0-b50b-d31e6ab1a2be" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -69,7 +69,7 @@ func (r *loginRequest) execute(h *hostel.Hostel, clients map[client]string) bool
 
 	r.chanToHandler <- "RESULT_LOGIN"
 
-	if nbLoggedClient == 2 {
+	if DebugMode && nbLoggedClient == 2 {
 		debugLogRisk("Server request handler suspended. Resume in 20s.")
 		time.Sleep(20 * time.Second)
 		debugLogRisk("Server request handler resumed.")
