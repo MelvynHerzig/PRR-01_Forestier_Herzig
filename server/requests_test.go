@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"server/tcpserver"
+	"server/tcpserver/clients"
 	"strings"
 	"testing"
 )
@@ -23,14 +23,18 @@ func setupSuite(tb testing.TB) func(tb testing.TB) {
 		log.Fatal("Port 8000 needed to run test. Please shutdown all application using it before running test.")
 	}
 
-	go tcpserver.StartServer(2,2)
+	// Starting TCP Server.
+	listener, serverErr := net.Listen("tcp", "localhost:8000")
+	if serverErr != nil {
+		log.Fatal(serverErr)
+	}
 
-	var err error
+	go clients.HandleClients(listener, 2, 2)
 
 	// Connection
-	conn, err = net.Dial("tcp", "localhost:8000")
-	if err != nil {
-		log.Fatal(err)
+	conn, dialErr := net.Dial("tcp", "localhost:8000")
+	if dialErr != nil {
+		log.Fatal(dialErr)
 	}
 
 	reader = bufio.NewReader(conn)

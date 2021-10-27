@@ -1,5 +1,5 @@
-// Package tcpserver implements logic to run server in debug mode.
-package tcpserver
+// Package clients implements logic to run server in debug mode.
+package clients
 
 import "fmt"
 

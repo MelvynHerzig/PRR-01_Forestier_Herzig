@@ -6,31 +6,32 @@ import (
 	"log"
 	"os"
 	"server/tcpserver"
+	"server/tcpserver/clients"
 	"strconv"
 )
 
-// main Starts hostel tcp server.
+// main Gets programs arguments, configuration file and start server.
 func main() {
-	// Getting program args (#rooms and #day of hostel).
+
+	// Getting program args (server number).
 	argsLen := len(os.Args)
-	if argsLen < 3 {
+	if argsLen < 2 {
 		log.Fatal("Paramètres manquants")
 	}
 
-	nbRooms, errRooms := strconv.ParseUint(os.Args[1], 10, 0)
-	nbDays, errDays   := strconv.ParseUint(os.Args[2], 10, 0)
+	noServ, errNoServ   := strconv.ParseUint(os.Args[1], 10, 0)
 
-	if errRooms != nil || errDays != nil {
-		log.Fatal("Paramètres invalides. Devrait être <nb chambres> <nb nuits>")
+	if  errNoServ != nil {
+		log.Fatal("Paramètre invalide. Devrait être <no serveur> <options>")
 	}
 
-	// Fetching last arguments
-	if argsLen == 4 {
-		for argIndex := 3 ; argIndex < argsLen; argIndex++ {
+	// Fetching options
+	if argsLen == 3 {
+		for argIndex := 2 ; argIndex < argsLen; argIndex++ {
 
 			switch os.Args[argIndex] {
 			case "-debug":
-				tcpserver.DebugMode = true
+				clients.DebugMode = true
 				fmt.Println("Starting with debug on")
 
 			default: log.Fatal("Argument inconnu ", os.Args[argIndex])
@@ -38,6 +39,9 @@ func main() {
 		}
 	}
 
-	tcpserver.StartServer(uint(nbRooms), uint(nbDays))
+	// TODO parse config
+	// something like config.Parse()
+
+	tcpserver.StartServer(uint(noServ))
 }
 
