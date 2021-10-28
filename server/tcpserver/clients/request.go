@@ -1,6 +1,6 @@
-// Package tcpserver implements the requests that can
-// be submitted to the hostel logic layer in tcp_server.go.
-package tcpserver
+// Package clients implements the requests that can
+// be submitted to the hostel logic layer in handle_clients.go.
+package clients
 
 import (
 	"server/hostel"
@@ -17,7 +17,7 @@ type hostelRequestable interface {
 // hostelRequest base content of all kind of request.
 type hostelRequest struct {
 	chanToHandler client
-	clientAddr string
+	clientAddr    string
 }
 
 // loginRequest request that logs clients in, in order to book, inspect and search free room.

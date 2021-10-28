@@ -1,6 +1,6 @@
-// Package tcpserver implements server side tcp logic.
+// Package clients implements server side tcp logic.
 // It handles each client on a specific goroutine and manages access to hostel rooms.
-package tcpserver
+package clients
 
 import (
 	"bufio"
@@ -22,14 +22,9 @@ var strNbRooms string
 // running after StartServer call.
 var strNbNights string
 
-// StartServer launches TCP Server, starts client handler goroutine and hostel logic goroutine.
-func StartServer(nbRooms, nbNights uint) {
+// HandleClients starts client handler goroutine and hostel logic goroutine.
+func HandleClients (listener net.Listener, nbRooms, nbNights uint) {
 
-	// Opening TCP Server.
-	listener, err := net.Listen("tcp", "localhost:8000")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// Starting concurrent hostel manager.
 	go hostelManager(nbRooms, nbNights)
@@ -81,6 +76,10 @@ func hostelManager(nbRooms, nbNights uint) {
 		select {
 		case request := <-requests:
 
+			// TODO call demande (Processus client -> processus mutex)
+
+			// TODO call attente (Processus client -> processus mutex)
+
 			if DebugMode {
 				debugLogRequestHandling(request)
 			}
@@ -90,6 +89,8 @@ func hostelManager(nbRooms, nbNights uint) {
 			if DebugMode {
 				debugLogRequestResult(request, success)
 			}
+
+			// TODO call fin (Processus client -> processus mutex)
 
 		case cli := <-leaving:
 			delete(clients, cli)
