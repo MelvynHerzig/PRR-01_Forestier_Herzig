@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	configReader "prr.configuration/reader"
 	"server/tcpserver"
 	"server/tcpserver/clients"
 	"strconv"
@@ -41,6 +42,8 @@ func main() {
 
 	// TODO parse config
 	// something like config.Parse()
+
+	configReader.Init("../config.json")
 
 	tcpserver.StartServer(uint(noServ))
 }
