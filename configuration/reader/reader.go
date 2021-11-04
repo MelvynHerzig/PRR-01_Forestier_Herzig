@@ -13,14 +13,15 @@ import (
 var reader *configReader = nil
 
 type Server struct {
-	Ip       string `json:"ip"`
-	Port     uint   `json:"port"`
+	Ip   string `json:"ip"`
+	Port uint   `json:"port"`
 }
 
-type configReader struct{
-	NbRooms uint `json:"nbRooms"`
-	NbNights uint `json:"nbNights"`
-	Servers []Server `json:"servers"`
+type configReader struct {
+	Debug    bool     `json:"debug"`
+	NbRooms  uint     `json:"nbRooms"`
+	NbNights uint     `json:"nbNights"`
+	Servers  []Server `json:"servers"`
 }
 
 func Init(path string) error {
@@ -35,22 +36,29 @@ func Init(path string) error {
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-
 	json.Unmarshal(byteValue, &reader)
 
 	return nil
 }
 
-func GetRoomsCount() (uint, error){
-	if reader == nil{
+func IsDebug() (bool, error) {
+	if reader == nil {
+		return false, errors.New("reader not initialized")
+	}
+
+	return reader.Debug, nil
+}
+
+func GetRoomsCount() (uint, error) {
+	if reader == nil {
 		return 0, errors.New("reader not initialized")
 	}
 
 	return reader.NbRooms, nil
 }
 
-func GetNightsCount() (uint, error){
-	if reader == nil{
+func GetNightsCount() (uint, error) {
+	if reader == nil {
 		return 0, errors.New("reader not initialized")
 	}
 
@@ -58,7 +66,7 @@ func GetNightsCount() (uint, error){
 }
 
 func GetServerById(id uint) (*Server, error) {
-	if reader == nil{
+	if reader == nil {
 		return nil, errors.New("reader not initialized")
 	}
 
@@ -68,17 +76,16 @@ func GetServerById(id uint) (*Server, error) {
 	return &reader.Servers[id], nil
 }
 
-func GetServerRandomly() (*Server, error)    {
-	if reader == nil{
+func GetServerRandomly() (*Server, error) {
+	if reader == nil {
 		return nil, errors.New("reader not initialized")
 	}
 
 	return GetServerById(uint(rand.Intn(len(reader.Servers))))
 }
 
-
 func GetServers() ([]Server, error) {
-	if reader == nil{
+	if reader == nil {
 		return nil, errors.New("reader not initialized")
 	}
 
@@ -86,7 +93,7 @@ func GetServers() ([]Server, error) {
 }
 
 func IsServerIP(address string) (bool, error) {
-	if reader == nil{
+	if reader == nil {
 		return false, errors.New("reader not initialized")
 	}
 
@@ -103,4 +110,3 @@ func IsServerIP(address string) (bool, error) {
 func isLocalhost(address string) bool {
 	return address == "127.0.0.1" || address == "localhost"
 }
-
