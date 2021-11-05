@@ -1,4 +1,7 @@
 {
+  "debug": true,
+  "nbRooms":10,
+  "nbNights":10,
   "servers": [
     {
       "ip": "127.0.0.1",

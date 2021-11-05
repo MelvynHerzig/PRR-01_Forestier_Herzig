@@ -13,7 +13,6 @@ func StartServer(serverNumber uint) {
 
 	// TODO add to config parser method to check serverNumber
 
-
 	// Starting TCP Server.
 	listener, err := net.Listen("tcp", "localhost:" + config.Servers[serverNumber].Port)
 	if err != nil {
