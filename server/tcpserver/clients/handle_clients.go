@@ -179,9 +179,9 @@ func makeUserRequest(clientAddr, req string, ch client) (bool, hostelRequestable
 		req.chanToHandler = ch
 		req.clientAddr = clientAddr
 
-		roomNumber, err1 := strconv.ParseUint(splits[1], 10, 0)
+		roomNumber,   err1 := strconv.ParseUint(splits[1], 10, 0)
 		arrivalNight, err2 := strconv.ParseUint(splits[2], 10, 0)
-		nbNights  , err3 := strconv.ParseUint(splits[3], 10, 0)
+		nbNights,     err3 := strconv.ParseUint(splits[3], 10, 0)
 		if err1 != nil || err2 != nil || err3 != nil {
 			break
 		}

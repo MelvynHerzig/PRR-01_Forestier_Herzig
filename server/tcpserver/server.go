@@ -21,6 +21,5 @@ func StartServer(serverNumber uint) {
 	}
 
 	sync.ServersSync(listener, serverNumber)
-
 	clients.HandleClients(listener, config.GetRoomsCount(), config.GetDaysCount())
 }
