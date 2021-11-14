@@ -1,4 +1,4 @@
-// Package hostel is the job logic. It implements the hostel room managment.
+// Package hostel is the job logic layer. It implements the hostel room managment.
 package hostel
 
 import "errors"

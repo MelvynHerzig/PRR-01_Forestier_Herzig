@@ -12,19 +12,22 @@ const (
 	REL        = "rel"
 )
 
+// Message is the struct passed between servers and network/mutex processes
 type Message struct {
-	messageType string
-	timestamp uint
-	srcServer uint
+	MessageType string
+	Timestamp uint
+	SrcServer uint
 }
 
-func (m *Message) serialize() string {
-	strTimestamp  := strconv.FormatUint(uint64(m.timestamp), 10)
-	strSrcServer  := strconv.FormatUint(uint64(m.srcServer), 10)
-	return m.messageType + " " + strTimestamp + " " + strSrcServer
+// Serialize function that serializes a message into a string.
+func Serialize(m Message) string {
+	strTimestamp  := strconv.FormatUint(uint64(m.Timestamp), 10)
+	strSrcServer  := strconv.FormatUint(uint64(m.SrcServer), 10)
+	return m.MessageType + " " + strTimestamp + " " + strSrcServer
 }
 
-func deserialize(content string) Message {
+// Deserialize function that deserializes a string into a message.
+func Deserialize(content string) Message {
 	splits := strings.Split(content, " ")
 
 	var receivedMessageType string
@@ -39,8 +42,8 @@ func deserialize(content string) Message {
 	receivedSrcServer, _ := strconv.ParseUint(splits[2], 10, 0)
 
 	return Message{
-		messageType: receivedMessageType,
-		timestamp:   uint(receivedTimestamp),
-		srcServer:   uint(receivedSrcServer),
+		MessageType: receivedMessageType,
+		Timestamp:   uint(receivedTimestamp),
+		SrcServer:   uint(receivedSrcServer),
 	}
 }

@@ -2,8 +2,8 @@ package reader
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"strings"
@@ -24,12 +24,12 @@ type configReader struct {
 	Servers  []Server `json:"servers"`
 }
 
-func Init(path string) error {
+func Init(path string) {
 	rand.Seed(time.Now().UnixNano())
 	jsonFile, err := os.Open(path)
 
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	defer jsonFile.Close()
@@ -37,74 +37,73 @@ func Init(path string) error {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	json.Unmarshal(byteValue, &reader)
-
-	return nil
 }
 
-func IsDebug() (bool, error) {
+func IsDebug() bool {
 	if reader == nil {
-		return false, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
-	return reader.Debug, nil
+	return reader.Debug
 }
 
-func GetRoomsCount() (uint, error) {
+func GetRoomsCount() uint {
 	if reader == nil {
-		return 0, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
-	return reader.NbRooms, nil
+	return reader.NbRooms
 }
 
-func GetNightsCount() (uint, error) {
+func GetNightsCount() uint {
 	if reader == nil {
-		return 0, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
-	return reader.NbNights, nil
+	return reader.NbNights
 }
 
-func GetServerById(id uint) (*Server, error) {
+func GetServerById(id uint) *Server {
 	if reader == nil {
-		return nil, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
 	if id >= uint(len(reader.Servers)) {
-		return nil, errors.New("invalid id")
+		return nil
 	}
-	return &reader.Servers[id], nil
+
+	return &reader.Servers[id]
 }
 
-func GetServerRandomly() (*Server, error) {
+func GetServerRandomly() *Server {
 	if reader == nil {
-		return nil, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
 	return GetServerById(uint(rand.Intn(len(reader.Servers))))
 }
 
-func GetServers() ([]Server, error) {
+func GetServers() []Server {
 	if reader == nil {
-		return nil, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
-	return reader.Servers, nil
+	return reader.Servers
 }
 
-func IsServerIP(address string) (bool, error) {
+func IsServerIP(address string) bool {
 	if reader == nil {
-		return false, errors.New("reader not initialized")
+		log.Fatal("reader not initialized")
 	}
 
 	var ip = strings.Split(address, ":")[0]
 	for _, server := range reader.Servers {
 		if server.Ip == ip || (isLocalhost(server.Ip) && isLocalhost(ip)) {
-			return true, nil
+			return true
 		}
 	}
 
-	return false, nil
+	return false
 }
 
 func isLocalhost(address string) bool {

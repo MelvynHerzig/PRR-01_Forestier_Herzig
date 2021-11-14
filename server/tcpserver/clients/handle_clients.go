@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	configReader "prr.configuration/reader"
 	"server/hostel"
+	"server/tcpserver/debug"
 	"strconv"
 	"strings"
 )
@@ -52,7 +54,7 @@ var (
 	leaving = make(chan client)
 
 	// requests channel to submit requests to job layer.
-	requests = make(chan hostelRequestable)
+	requests = make(chan HostelRequestable)
 )
 
 // hostelManager concurrency safe function that handles hostel rooms management.
@@ -69,8 +71,8 @@ func hostelManager(nbRooms, nbNights uint) {
 	// Handling clients.
 	for {
 
-		if DebugMode {
-			debugLogRisk("--------- Enter shared zone ---------")
+		if configReader.IsDebug() {
+			debug.LogRisk("--------- Enter shared zone ---------")
 		}
 
 		select {
@@ -80,14 +82,14 @@ func hostelManager(nbRooms, nbNights uint) {
 
 			// TODO call attente (Processus client -> processus mutex)
 
-			if DebugMode {
-				debugLogRequestHandling(request)
+			if configReader.IsDebug() {
+				debug.LogRequestHandling(request)
 			}
 
 			success :=  request.execute(hostelManager, clients)
 
-			if DebugMode {
-				debugLogRequestResult(request, success)
+			if configReader.IsDebug() {
+				debug.LogRequestResult(request, success)
 			}
 
 			// TODO call fin (Processus client -> processus mutex)
@@ -97,8 +99,8 @@ func hostelManager(nbRooms, nbNights uint) {
 			close(cli)
 		}
 
-		if DebugMode {
-			debugLogRisk("--------- Leave shared zone ---------")
+		if configReader.IsDebug() {
+			debug.LogRisk("--------- Leave shared zone ---------")
 		}
 	}
 }
@@ -111,8 +113,8 @@ func handleConnection(conn net.Conn) {
 	go func() {
 		for msg := range ch { // client writer <- hostelManager / handleConnection
 
-			if DebugMode {
-				debugLogSafe("To " + conn.RemoteAddr().String() + " : " + msg)
+			if configReader.IsDebug() {
+				debug.LogSafe("To " + conn.RemoteAddr().String() + " : " + msg)
 			}
 
 			_, _ = fmt.Fprintln(conn, msg) // TCP Client <- client writer
@@ -132,8 +134,8 @@ func handleConnection(conn net.Conn) {
 
 		goodRequest, req := makeUserRequest(conn.RemoteAddr().String(), input.Text(), ch)
 
-		if DebugMode {
-			debugLogSafe("From " + conn.RemoteAddr().String() + " : " + input.Text())
+		if configReader.IsDebug() {
+			debug.LogSafe("From " + conn.RemoteAddr().String() + " : " + input.Text())
 		}
 
 		if goodRequest {
@@ -149,7 +151,7 @@ func handleConnection(conn net.Conn) {
 
 // makeUserRequest analyzes incoming message to create request to hostel manager.
 // Clients request must contain the exact amount of arguments.
-func makeUserRequest(clientAddr, req string, ch client) (bool, hostelRequestable) {
+func makeUserRequest(clientAddr, req string, ch client) (bool, HostelRequestable) {
 
 	trimReq := strings.TrimSpace(req)
 	splits := strings.Split(trimReq, " ")

@@ -1,24 +1,33 @@
-// Package tcpserver manages the tcp server
+// Package tcpserver manages the tcp server start
 package tcpserver
 
 import (
 	"log"
 	"net"
-	"server/config"
+	configReader "prr.configuration/reader"
 	"server/tcpserver/clients"
-	"server/tcpserver/sync"
+	"server/tcpserver/sync/network"
+	"strconv"
 )
 
-func StartServer(serverNumber uint) {
+var serverNumber uint = 0
 
-	// TODO add to config parser method to check serverNumber
+// StartServer start the server
+func StartServer(noServer uint) {
+
+	serverNumber = noServer
 
 	// Starting TCP Server.
-	listener, err := net.Listen("tcp", "localhost:" + config.Servers[serverNumber].Port)
+	listener, err := net.Listen("tcp", "localhost:" + strconv.FormatUint(uint64(configReader.GetServerById(serverNumber).Port), 10))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sync.ServersSync(listener, serverNumber)
-	clients.HandleClients(listener, config.GetRoomsCount(), config.GetDaysCount())
+	network.ServersSync(listener)
+	clients.HandleClients(listener, configReader.GetRoomsCount(), configReader.GetNightsCount())
+}
+
+// GetServerNumber gets the current server number
+func GetServerNumber() uint {
+	return serverNumber
 }

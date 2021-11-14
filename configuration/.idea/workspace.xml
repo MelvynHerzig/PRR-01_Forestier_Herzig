@@ -4,33 +4,37 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dac421f1-2b8a-4de0-b50b-d31e6ab1a2be" name="Changes" comment="">
+    <list default="true" id="6ae6040d-3dba-43b7-b335-6416830d78dc" name="Changes" comment="">
       <change afterPath="$PROJECT_DIR$/../server/tcpserver/debug/debugger.go" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../server/tcpserver/sync/clock/clock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../configuration/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/../configuration/reader/reader.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/tcpserver/sync/mutex/mutex_process.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../client/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../client/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/reader/reader.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/config/config.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/debugger.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/request.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/message.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/message.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/mutex_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/mutex_process.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/network_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/network_process.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/mutex_process.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/network_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/network/network_process.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/sync_message.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../../../../Program Files/Go" />
+  <component name="GOROOT" url="file://D:/Program Files/Go" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
-  <component name="ProjectId" id="1zmSdpeRvwZNDrSpLjuEP9gV9C6" />
+  <component name="ProjectId" id="20mNHnD1NudDZbRkt9CXPbV3Skw" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />

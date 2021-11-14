@@ -3,15 +3,17 @@
 package clients
 
 import (
+	configReader "prr.configuration/reader"
 	"server/hostel"
+	"server/tcpserver/debug"
 	"strconv"
 	"time"
 )
 
-// hostelRequestable interface of request that can be made to hostel.
-type hostelRequestable interface {
+// HostelRequestable interface of request that can be made to hostel.
+type HostelRequestable interface {
 	execute(h *hostel.Hostel, clients map[client]string) bool
-	toString() string
+	ToString() string
 }
 
 // hostelRequest base content of all kind of request.
@@ -65,21 +67,21 @@ func (r *loginRequest) execute(h *hostel.Hostel, clients map[client]string) bool
 	clients[r.chanToHandler] = r.clientName
 	h.TryRegister(r.clientName)
 
-	nbLoggedClient++
+	debug.NbLoggedClient++
 
 	r.chanToHandler <- "RESULT_LOGIN"
 
-	if DebugMode && nbLoggedClient == 2 {
-		debugLogRisk("Server request handler suspended. Resume in 20s.")
+	if configReader.IsDebug() && debug.NbLoggedClient == 2 {
+		debug.LogRisk("Server request handler suspended. Resume in 20s.")
 		time.Sleep(20 * time.Second)
-		debugLogRisk("Server request handler resumed.")
+		debug.LogRisk("Server request handler resumed.")
 	}
 
 	return true
 }
 
-// toString converts loginRequest to string.
-func (r *loginRequest) toString() string {
+// ToString converts loginRequest to string.
+func (r *loginRequest) ToString() string {
 	return "From " + r.clientAddr + " login as " + r.clientName
 }
 
@@ -93,14 +95,14 @@ func (r *logoutRequest) execute(h *hostel.Hostel, clients map[client]string) boo
 
 	clients[r.chanToHandler] = ""
 
-	nbLoggedClient--
+	debug.NbLoggedClient--
 
 	r.chanToHandler <- "RESULT_LOGOUT"
 	return true
 }
 
-// toString converts logoutRequest to string.
-func (r *logoutRequest) toString() string {
+// ToString converts logoutRequest to string.
+func (r *logoutRequest) ToString() string {
 	return "From " + r.clientAddr + " logout"
 }
 
@@ -125,8 +127,8 @@ func (r *bookRequest) execute(h *hostel.Hostel, clients map[client]string) bool{
 	return true
 }
 
-// toString converts bookRequest to string.
-func (r *bookRequest) toString() string {
+// ToString converts bookRequest to string.
+func (r *bookRequest) ToString() string {
 
 	strRoom     := strconv.FormatUint(uint64(r.roomNumber), 10)
 	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
@@ -162,8 +164,8 @@ func (r *roomStateRequest) execute(h *hostel.Hostel, clients map[client]string) 
 	return true
 }
 
-// toString converts roomStateRequest to string.
-func (r *roomStateRequest) toString() string {
+// ToString converts roomStateRequest to string.
+func (r *roomStateRequest) ToString() string {
 	return "From " + r.clientAddr + " ROOMLIST for night" + strconv.FormatUint(uint64(r.nightNumber), 10)
 }
 
@@ -189,8 +191,8 @@ func (r *disponibilityRequest) execute(h *hostel.Hostel, clients map[client]stri
 	return true
 }
 
-// toString converts disponibilityRequest to string.
-func (r *disponibilityRequest) toString() string {
+// ToString converts disponibilityRequest to string.
+func (r *disponibilityRequest) ToString() string {
 
 	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
 	strDuration := strconv.FormatUint(uint64(r.duration), 10)

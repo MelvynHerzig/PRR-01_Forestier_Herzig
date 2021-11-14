@@ -2,12 +2,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	configReader "prr.configuration/reader"
 	"server/tcpserver"
-	"server/tcpserver/clients"
 	"strconv"
 )
 
@@ -17,33 +15,20 @@ func main() {
 	// Getting program args (server number).
 	argsLen := len(os.Args)
 	if argsLen < 2 {
-		log.Fatal("Paramètres manquants")
+		log.Fatal("Un paramètre attendu: <no de server>")
 	}
 
 	noServ, errNoServ   := strconv.ParseUint(os.Args[1], 10, 0)
-
 	if  errNoServ != nil {
-		log.Fatal("Paramètre invalide. Devrait être <no serveur> <options>")
+		log.Fatal("Paramètre invalide. Devrait être <no serveur>")
 	}
 
-	// Fetching options
-	if argsLen == 3 {
-		for argIndex := 2 ; argIndex < argsLen; argIndex++ {
-
-			switch os.Args[argIndex] {
-			case "-debug":
-				clients.DebugMode = true
-				fmt.Println("Starting with debug on")
-
-			default: log.Fatal("Argument inconnu ", os.Args[argIndex])
-			}
-		}
-	}
-
-	// TODO parse config
-	// something like config.Parse()
-
+	// Init configuration
 	configReader.Init("../config.json")
+
+	if noServ < 0 || noServ >= uint64(len(configReader.GetServers())) {
+		log.Fatal("Le numero de serveur doit être entre [0, nb serveurs [")
+	}
 
 	tcpserver.StartServer(uint(noServ))
 }
