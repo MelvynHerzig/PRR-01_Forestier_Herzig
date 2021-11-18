@@ -12,6 +12,8 @@ import (
 
 var reader *configReader = nil
 
+var localServerNumber uint
+
 type Server struct {
 	Ip   string `json:"ip"`
 	Port uint   `json:"port"`
@@ -24,7 +26,7 @@ type configReader struct {
 	Servers  []Server `json:"servers"`
 }
 
-func Init(path string) {
+func Init(path string, serverNumber uint) {
 	rand.Seed(time.Now().UnixNano())
 	jsonFile, err := os.Open(path)
 
@@ -37,6 +39,8 @@ func Init(path string) {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	json.Unmarshal(byteValue, &reader)
+
+	localServerNumber = serverNumber
 }
 
 func IsDebug() bool {
@@ -108,4 +112,8 @@ func IsServerIP(address string) bool {
 
 func isLocalhost(address string) bool {
 	return address == "127.0.0.1" || address == "localhost"
+}
+
+func GetLocalServerNumber() uint {
+	return localServerNumber
 }

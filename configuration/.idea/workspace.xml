@@ -5,22 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6ae6040d-3dba-43b7-b335-6416830d78dc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../server/tcpserver/debug/debugger.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../server/tcpserver/sync/clock/clock.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../server/tcpserver/sync/mutex/mutex_process.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../client/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config.json" beforeDir="false" afterPath="$PROJECT_DIR$/../config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/reader/reader.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/config/config.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/debugger.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/request.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/request.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/message.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/message.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/mutex_process.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/network_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/network/network_process.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/sync_message.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/sync/network/network_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/sync/network/network_process.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -1,12 +1,9 @@
 // Package mutex handles access to critical section between servers
-package mutex
+package sync
 
 import (
-	configReader "prr.configuration/reader"
-	"server/tcpserver"
-	"server/tcpserver/sync"
+	config "prr.configuration/reader"
 	"server/tcpserver/sync/clock"
-	"server/tcpserver/sync/network"
 )
 
 // Channels used for communication between client process and mutex process to manage critical section access
@@ -17,22 +14,22 @@ var (
 )
 
 // Channel used to get received mesage from network process.
-var onMessage chan sync.Message
+var onMessage chan Message
 
 // Stores the messages of all servers
-var messages []sync.Message
+var messages []Message
 
 // mutexCore method executed in a go routine. It is responsible to be the mutex "engine".
 // Other thread can use the channels to pass
 func mutexCore() {
 
 	// Stores the messages of all servers
-    messages = make([]sync.Message, len(configReader.GetServers()))
+    messages = make([]Message, len(config.GetServers()))
 
 	// Init the messages
 	for i := 0; i < len(messages); i++ {
-		messages[i] = sync.Message{
-			MessageType: sync.REL,
+		messages[i] = Message{
+			MessageType: REL,
 			Timestamp:   0,
 			SrcServer:   uint(i),
 		}
@@ -64,32 +61,32 @@ func Leave() {
 }
 
 // HandleMessage function called by network process to signal that a message arrived.
-func HandleMessage(message sync.Message) {
+func HandleMessage(message Message) {
 	onMessage <- message
 }
 
 // doDemand function called when client process ask for mutex
 func doDemand() {
 	clock.IncTimestamp()
-	message := sync.Message{ MessageType: sync.REQ,
+	message := Message{ MessageType: REQ,
 		                     Timestamp: clock.GetTimestamp(),
-		                     SrcServer: tcpserver.GetServerNumber()}
-	messages[tcpserver.GetServerNumber()] = message
-	network.SendToAll(sync.Serialize(message))
+		                     SrcServer: config.GetLocalServerNumber()}
+	messages[config.GetLocalServerNumber()] = message
+	SendToAll(Serialize(message))
 }
 
 // doLeave function called when client process leaves the mutex
 func doLeave() {
 	clock.IncTimestamp()
-	message := sync.Message{ MessageType: sync.REL,
+	message := Message{ MessageType: REL,
 							 Timestamp: clock.GetTimestamp(),
-							 SrcServer: tcpserver.GetServerNumber()}
-	messages[tcpserver.GetServerNumber()] = message
-	network.SendToAll(sync.Serialize(message))
+							 SrcServer: config.GetLocalServerNumber()}
+	messages[config.GetLocalServerNumber()] = message
+	SendToAll(Serialize(message))
 }
 
 // doHandleMessage handles a mutex message incoming from distant server
-func doHandleMessage (msg sync.Message) {
+func doHandleMessage (msg Message) {
 	clock.SyncTimestamp(msg.Timestamp)
 
 	// Because we have implemented optimised version.
@@ -97,11 +94,11 @@ func doHandleMessage (msg sync.Message) {
 	messages[msg.SrcServer] = msg
 
 	// Optimisation
-	if msg.MessageType == sync.REQ && messages[tcpserver.GetServerNumber()].MessageType != sync.REQ {
-		response := sync.Message{ MessageType: sync.ACK,
+	if msg.MessageType == REQ && messages[config.GetLocalServerNumber()].MessageType != REQ {
+		response := Message{ MessageType: ACK,
 								  Timestamp: clock.GetTimestamp(),
-								  SrcServer: tcpserver.GetServerNumber()}
-		network.SendToOne(msg.SrcServer, sync.Serialize(response))
+								  SrcServer: config.GetLocalServerNumber()}
+		SendToOne(msg.SrcServer, Serialize(response))
 	}
 
 	checkCriticalSection()
@@ -109,11 +106,11 @@ func doHandleMessage (msg sync.Message) {
 
 // checkCriticalSection checks if server has access to mutex
 func checkCriticalSection() {
-	if messages[tcpserver.GetServerNumber()].MessageType != sync.REQ {
+	if messages[config.GetLocalServerNumber()].MessageType != REQ {
 		return
 	}
 
-	myNumber := tcpserver.GetServerNumber()
+	myNumber := config.GetLocalServerNumber()
 
 	for i := 0; i < len(messages); i++ {
 		if uint(i) == myNumber {
@@ -129,5 +126,5 @@ func checkCriticalSection() {
 	}
 
 	// Signal client that he can enter
-	allow<- struct{}{}
+	allow <- struct{}{}
 }

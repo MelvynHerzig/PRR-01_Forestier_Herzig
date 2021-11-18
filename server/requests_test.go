@@ -29,7 +29,7 @@ func setupSuite(tb testing.TB) func(tb testing.TB) {
 		log.Fatal(serverErr)
 	}
 
-	go clients.HandleClients(listener, 2, 2)
+	go clients.HandleClients(listener)
 
 	// Connection
 	conn, dialErr := net.Dial("tcp", "localhost:8000")

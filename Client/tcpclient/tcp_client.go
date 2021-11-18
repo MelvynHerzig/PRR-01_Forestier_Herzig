@@ -17,7 +17,7 @@ import (
 func StartClient(servAddress string) {
 
 	// Connection
-	conn, err := net.Dial("tcp", servAddress + ":10000")
+	conn, err := net.Dial("tcp", servAddress + ":3000")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -7,31 +7,17 @@ import (
 	"fmt"
 	"log"
 	"net"
-	configReader "prr.configuration/reader"
+	config "prr.configuration/reader"
 	"server/hostel"
-	"server/tcpserver/debug"
 	"strconv"
 	"strings"
 )
 
-// strNbRooms stores the nbRooms passed to StartServer. Thus, clienHandler can indicate how many rooms the hostel has.
-// No race protection needed because this is set once in StartServer and read only in clientHandler that is
-// running after StartServer call.
-var strNbRooms string
-
-// strNbNights stores the nbNights passed to StartServer. Thus, clienHandler can indicate how many night the hostel supports.
-// No race protection needed because this is set once in StartServer and read only in clientHandler that is
-// running after StartServer call.
-var strNbNights string
-
 // HandleClients starts client handler goroutine and hostel logic goroutine.
-func HandleClients (listener net.Listener, nbRooms, nbNights uint) {
-
+func HandleClients (listener net.Listener) {
 
 	// Starting concurrent hostel manager.
-	go hostelManager(nbRooms, nbNights)
-	strNbRooms = strconv.FormatUint(uint64(nbRooms), 10)
-	strNbNights = strconv.FormatUint(uint64(nbNights), 10)
+	go hostelManager(config.GetRoomsCount(), config.GetNightsCount())
 
 	// Listening for TCP connections.
 	for {
@@ -71,10 +57,6 @@ func hostelManager(nbRooms, nbNights uint) {
 	// Handling clients.
 	for {
 
-		if configReader.IsDebug() {
-			debug.LogRisk("--------- Enter shared zone ---------")
-		}
-
 		select {
 		case request := <-requests:
 
@@ -82,25 +64,13 @@ func hostelManager(nbRooms, nbNights uint) {
 
 			// TODO call attente (Processus client -> processus mutex)
 
-			if configReader.IsDebug() {
-				debug.LogRequestHandling(request)
-			}
-
-			success :=  request.execute(hostelManager, clients)
-
-			if configReader.IsDebug() {
-				debug.LogRequestResult(request, success)
-			}
+			request.execute(hostelManager, clients)
 
 			// TODO call fin (Processus client -> processus mutex)
 
 		case cli := <-leaving:
 			delete(clients, cli)
 			close(cli)
-		}
-
-		if configReader.IsDebug() {
-			debug.LogRisk("--------- Leave shared zone ---------")
 		}
 	}
 }
@@ -112,16 +82,14 @@ func handleConnection(conn net.Conn) {
 	// Starting client writer
 	go func() {
 		for msg := range ch { // client writer <- hostelManager / handleConnection
-
-			if configReader.IsDebug() {
-				debug.LogSafe("To " + conn.RemoteAddr().String() + " : " + msg)
-			}
-
 			_, _ = fmt.Fprintln(conn, msg) // TCP Client <- client writer
 		}
 	}()
 
-	ch <- "WELCOME Welcome in the FH Hostel ! Nb rooms: "  + strNbRooms + ", nb nights: " + strNbNights +
+	strRooms  := strconv.FormatUint(uint64(config.GetRoomsCount()) , 10)
+	strNights := strconv.FormatUint(uint64(config.GetNightsCount()), 10)
+
+	ch <- "WELCOME Welcome in the FH Hostel ! Nb rooms: "  + strRooms + ", nb nights: " + strNights +
 		"- LOGIN <userName>" +
 		"- LOGOUT" +
 		"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
@@ -133,10 +101,6 @@ func handleConnection(conn net.Conn) {
 	for input.Scan() {
 
 		goodRequest, req := makeUserRequest(conn.RemoteAddr().String(), input.Text(), ch)
-
-		if configReader.IsDebug() {
-			debug.LogSafe("From " + conn.RemoteAddr().String() + " : " + input.Text())
-		}
 
 		if goodRequest {
 			requests <- req

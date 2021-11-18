@@ -3,11 +3,15 @@ package main
 
 import (
 	"log"
+	"net"
 	"os"
-	configReader "prr.configuration/reader"
-	"server/tcpserver"
+	config "prr.configuration/reader"
+	"server/tcpserver/clients"
+	"server/tcpserver/sync"
 	"strconv"
 )
+
+var ServerNumber uint = 0
 
 // main Gets programs arguments, configuration file and start server.
 func main() {
@@ -24,12 +28,20 @@ func main() {
 	}
 
 	// Init configuration
-	configReader.Init("../config.json")
+	config.Init("../config.json", uint(noServ))
 
-	if noServ < 0 || noServ >= uint64(len(configReader.GetServers())) {
+	if noServ < 0 || noServ >= uint64(len(config.GetServers())) {
 		log.Fatal("Le numero de serveur doit être entre [0, nb serveurs [")
 	}
 
-	tcpserver.StartServer(uint(noServ))
+	// Starting TCP Server.
+	localPort := config.GetServerById(config.GetLocalServerNumber()).Port
+	listener, err := net.Listen("tcp", "localhost:" + strconv.FormatUint(uint64(localPort), 10))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sync.ServersSync(listener)
+	clients.HandleClients(listener)
 }
 
