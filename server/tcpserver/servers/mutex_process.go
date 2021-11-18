@@ -1,16 +1,16 @@
 // Package mutex handles access to critical section between servers
-package sync
+package servers
 
 import (
 	config "prr.configuration/reader"
-	"server/tcpserver/sync/clock"
+	"server/tcpserver/servers/clock"
 )
 
 // Channels used for communication between client process and mutex process to manage critical section access
 var (
 	demand  chan struct{}
 	leave   chan struct{}
-	allow   chan struct{} // to awake a client process waiting for critical section
+	Allow   chan struct{} // to awake a client process waiting for critical section
 )
 
 // Channel used to get received mesage from network process.
@@ -36,7 +36,6 @@ func mutexCore() {
 	}
 
 	for {
-
 		select {
 			case <-demand:
 			case <-leave:
@@ -48,11 +47,6 @@ func mutexCore() {
 // Demand function called by client process to signal that it wants critical section access.
 func Demand() {
 	demand <- struct{}{}
-}
-
-// Waiting function called by client process to signal that it waits for critical section access
-func Waiting() {
-	<-allow
 }
 
 // Leave function called by client process to signal that it finished critical section
@@ -126,5 +120,5 @@ func checkCriticalSection() {
 	}
 
 	// Signal client that he can enter
-	allow <- struct{}{}
+	Allow <- struct{}{}
 }

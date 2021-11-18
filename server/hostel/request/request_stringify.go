@@ -1,6 +1,8 @@
 package request
 
-import "strconv"
+import (
+	"fmt"
+)
 
 // ToString converts loginRequest to string.
 func (r *loginRequest) ToString() string {
@@ -9,25 +11,17 @@ func (r *loginRequest) ToString() string {
 
 // ToString converts bookRequest to string.
 func (r *bookRequest) ToString() string {
-
-	strRoom     := strconv.FormatUint(uint64(r.roomNumber), 10)
-	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
-	strDuration := strconv.FormatUint(uint64(r.duration), 10)
-
-	return "BOOK room " + strRoom + " from night" + strNight + " for " + strDuration + " night(s)"
+	return fmt.Sprintf("BOOK room %d from night %d for %d night(s)", r.roomNumber, r.nightStart, r.duration)
 }
 
 // ToString converts roomStateRequest to string.
 func (r *roomStateRequest) ToString() string {
-	return "ROOMLIST for night" + strconv.FormatUint(uint64(r.nightNumber), 10)
+	return fmt.Sprintf("ROOMLIST for night %d", r.nightNumber)
 }
 
 // ToString converts disponibilityRequest to string.
 func (r *disponibilityRequest) ToString() string {
-
-	strNight    := strconv.FormatUint(uint64(r.nightStart), 10)
-	strDuration := strconv.FormatUint(uint64(r.duration), 10)
-	return "FREEROOM from night" + strNight + " for " + strDuration + " night(s)"
+	return fmt.Sprintf("FREEROOM from night %d for %d night(s)", r.nightStart, r.duration)
 }
 
 // ToString converts logoutRequest to string.

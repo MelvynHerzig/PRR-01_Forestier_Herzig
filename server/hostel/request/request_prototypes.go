@@ -4,10 +4,10 @@ import "server/hostel"
 
 // HostelRequestable interface of request that can be made to hostel.
 type HostelRequestable interface {
-	execute(h *hostel.Hostel) string
+	Execute(h *hostel.Hostel) (bool, string, string)
 	ToString() string
-	setUsername(name string)
-	serialize() string
+	SetUsername(name string)
+	Serialize() string
 }
 
 // hostelRequest base content of all kind of request.
@@ -15,8 +15,8 @@ type hostelRequest struct {
 	username string
 }
 
-// setUsername sets the username used to execute the request.
-func (r *hostelRequest) setUsername(name string) {
+// SetUsername sets the username used to execute the request.
+func (r *hostelRequest) SetUsername(name string) {
 	r.username = name
 }
 

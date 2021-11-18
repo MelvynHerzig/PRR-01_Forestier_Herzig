@@ -1,18 +1,17 @@
 package request
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
-// makeUserRequest analyzes incoming message to create request to hostel manager.
+// MakeRequest analyzes incoming message to create request to hostel manager.
 // Clients request must contain the exact amount of arguments.
-func makeUserRequest(req string) (bool, HostelRequestable) {
+func MakeRequest(req string) (bool, HostelRequestable) {
 
 	trimReq := strings.TrimSpace(req)
 	splits := strings.Split(trimReq, " ")
-	
-	var hostelRequestable HostelRequestable
 
 	switch splits[0] {
 	case "LOGIN":
@@ -21,14 +20,14 @@ func makeUserRequest(req string) (bool, HostelRequestable) {
 		}
 		var req loginRequest
 		req.clientName = splits[1]
-		if len(splits) > 2 { req.setUsername(splits[2]) }
+		if len(splits) > 2 { req.SetUsername(splits[2]) }
 
-		hostelRequestable = &req
+		return true, &req
 
 	case "LOGOUT":
 		var req logoutRequest
-		if len(splits) > 1 { req.setUsername(splits[1]) }
-		hostelRequestable = &req
+		if len(splits) > 1 { req.SetUsername(splits[1]) }
+		return true, &req
 
 	case "BOOK":
 		if len(splits) < 4 {
@@ -46,9 +45,9 @@ func makeUserRequest(req string) (bool, HostelRequestable) {
 		req.roomNumber = uint(roomNumber)
 		req.nightStart = uint(arrivalNight)
 		req.duration   = uint(nbNights)
-		if len(splits) > 4 { req.setUsername(splits[4]) }
+		if len(splits) > 4 { req.SetUsername(splits[4]) }
 
-		hostelRequestable = &req
+		return true, &req
 
 	case "ROOMLIST":
 		if len(splits) < 2 {
@@ -62,8 +61,8 @@ func makeUserRequest(req string) (bool, HostelRequestable) {
 		}
 
 		req.nightNumber = uint(night)
-		if len(splits) > 2 { req.setUsername(splits[2]) }
-		hostelRequestable = &req
+		if len(splits) > 2 { req.SetUsername(splits[2]) }
+		return true, &req
 
 	case "FREEROOM":
 		if len(splits) < 3 {
@@ -80,33 +79,30 @@ func makeUserRequest(req string) (bool, HostelRequestable) {
 		req.nightStart = uint(arrivalNight)
 		req.duration   = uint(nbNights)
 
-		if len(splits) > 3 { req.setUsername(splits[3]) }
+		if len(splits) > 3 { req.SetUsername(splits[3]) }
 
-		hostelRequestable = &req
-
-	default:
-		return false, nil
+		return true, &req
 	}
 
-	return true, hostelRequestable
+	return false, nil
 }
 
-func (r *loginRequest) serialize() string{
-	return "biop bop"
+func (r *loginRequest) Serialize() string{
+	return "LOGIN " + r.clientName
 }
 
-func (r *logoutRequest) serialize() string{
-	return "biop bop"
+func (r *logoutRequest) Serialize() string{
+	return "LOGOUT " + r.username
 }
 
-func (r *bookRequest) serialize() string{
-	return "biop bop"
+func (r *bookRequest) Serialize() string{
+	return fmt.Sprintf("BOOK %d %d %d %s", r.roomNumber, r.nightStart, r.duration, r.username)
 }
 
-func (r *roomStateRequest) serialize() string{
-	return "biop bop"
+func (r *roomStateRequest) Serialize() string{
+	return fmt.Sprintf("ROOMLIST %d %s", r.nightNumber, r.username)
 }
 
-func (r *disponibilityRequest) serialize() string{
-	return "biop bop"
+func (r *disponibilityRequest) Serialize() string{
+	return fmt.Sprintf("FREEROOM %d %d %s", r.nightStart, r.duration, r.username)
 }

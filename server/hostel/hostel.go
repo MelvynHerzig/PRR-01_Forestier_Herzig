@@ -48,7 +48,7 @@ func NewHostel(nbRooms, nbNights uint) (*Hostel, error) {
 func (h* Hostel) Login(name string) string {
 
 	// Try to register client if he doesn't already exist
-	if _, ok := h.clients[name]; ok == false {
+	if _, ok := h.clients[name]; name != "" && ok == false {
 		h.clients[name] = &client{id: 1 + h.nbClients, logged: false}
 		h.nbClients++
 	}
@@ -102,9 +102,6 @@ func (h *Hostel) Book(username string, noRoom, nightStart, duration uint) string
 // GetRoomsState returns state for each rooms: "free", "self reserved" or "occupied". Client must be registered.
 // Nights are going from 1 to h.nbRooms.
 func (h *Hostel) GetRoomsState(username string, noNight uint) string {
-
-	roomsState := make([]string, h.nbRooms)
-
 	// Checks
 	if ok, msg := h.checkClientLogged(username); ok == false {
 		return msg
@@ -124,11 +121,11 @@ func (h *Hostel) GetRoomsState(username string, noNight uint) string {
 
 		switch h.rooms[room][noNight- 1] {
 		case freeRoom:
-			roomsState[room] = "Free"
+			res += "Free"
 		case h.clients[username].id:
-			roomsState[room] = "Self reserved"
+			res += "Self reserved"
 		default:
-			roomsState[room] = "Occupied"
+			res += "Occupied"
 		}
 	}
 
@@ -176,6 +173,8 @@ func (h* Hostel) Logout(name string) string {
 	if ok, msg := h.checkClientLogged(name); ok == false {
 		return msg
 	}
+
+	h.clients[name].logged = false;
 
 	return "RESULT_LOGOUT"
 }

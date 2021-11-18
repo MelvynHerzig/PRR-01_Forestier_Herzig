@@ -2,34 +2,44 @@ package request
 
 import (
 	"server/hostel"
+	"strings"
 )
 
-// execute Calls hostel login function with provided clientName in request.
-func (r *loginRequest) execute(h *hostel.Hostel) string {
+// Execute Calls hostel login function with provided clientName in request.
+func (r *loginRequest) Execute(h *hostel.Hostel) (bool, string, string) {
 
-	return h.Login(r.clientName)
+	if r.username != "" {
+		return false, "", "Must log out before log in."
+	}
+
+	response := h.Login(r.clientName)
+	return strings.Split(response, " ")[0] == "RESULT_LOGIN", r.clientName, response
 }
 
-// execute Calls hostel book function with provided period in request.
-func (r *bookRequest) execute(h *hostel.Hostel) string{
+// Execute Calls hostel book function with provided period in request.
+func (r *bookRequest) Execute(h *hostel.Hostel) (bool, string, string){
 
-	return h.Book(r.username, r.roomNumber, r.nightStart, r.duration)
+	response := h.Book(r.username, r.roomNumber, r.nightStart, r.duration)
+	return strings.Split(response, " ")[0] == "RESULT_BOOK", r.username, response
 }
 
-// execute Calls hostel getRoomState function with provided arguments in request.
-func (r *roomStateRequest) execute(h *hostel.Hostel) string {
+// Execute Calls hostel getRoomState function with provided arguments in request.
+func (r *roomStateRequest) Execute(h *hostel.Hostel) (bool, string, string) {
 
-	return h.GetRoomsState(r.username, r.nightNumber)
+	response := h.GetRoomsState(r.username, r.nightNumber)
+	return strings.Split(response, " ")[0] == "RESULT_ROOMLIST", r.username, response
 }
 
-// execute Call hostel searchDisponibility function with provided arguments in request.
-func (r *disponibilityRequest) execute(h *hostel.Hostel) string {
+// Execute Call hostel searchDisponibility function with provided arguments in request.
+func (r *disponibilityRequest) Execute(h *hostel.Hostel) (bool, string, string) {
 
-	return h.SearchDisponibility(r.username, r.nightStart, r.duration)
+	response := h.SearchDisponibility(r.username, r.nightStart, r.duration)
+	return strings.Split(response, " ")[0] == "RESULT_FREEROOM", r.username, response
 }
 
-// execute Calls hostel logout function with request username in request.
-func (r *logoutRequest) execute(h *hostel.Hostel) string {
+// Execute Calls hostel logout function with request username in request.
+func (r *logoutRequest) Execute(h *hostel.Hostel) (bool, string, string) {
 
-	return h.Logout(r.username)
+	response := h.Logout(r.username)
+	return strings.Split(response, " ")[0] == "RESULT_LOGOUT", "", response
 }

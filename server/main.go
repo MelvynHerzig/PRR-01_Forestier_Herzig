@@ -7,7 +7,7 @@ import (
 	"os"
 	config "prr.configuration/reader"
 	"server/tcpserver/clients"
-	"server/tcpserver/sync"
+	"server/tcpserver/servers"
 	"strconv"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sync.ServersSync(listener)
+	servers.ServersSync(listener)
 	clients.HandleClients(listener)
 }
 
