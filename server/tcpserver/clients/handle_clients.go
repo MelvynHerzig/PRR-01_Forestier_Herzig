@@ -99,7 +99,6 @@ func handleConnection(conn net.Conn) {
 	// Scanning incoming client message.
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
-
 		goodRequest, req := makeUserRequest(conn.RemoteAddr().String(), input.Text(), ch)
 
 		if goodRequest {
