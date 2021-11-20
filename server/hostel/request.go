@@ -1,18 +1,16 @@
-package request
+package hostel
 
-import "server/hostel"
-
-// HostelRequestable interface of request that can be made to hostel.
-type HostelRequestable interface {
-	Execute(h *hostel.Hostel) (bool, string, string)
+// Request interface of communication that can be submitted to Manager with SubmitRequest.
+type Request interface {
+	execute(h *hostel) Response
 	ToString() string
 	SetUsername(name string)
 	Serialize() string
 }
 
-// hostelRequest base content of all kind of request.
+// hostelRequest base content of all kind of requestables.
 type hostelRequest struct {
-	username string
+	username string // Logged username to use, can be null in the case of a loginRequest
 }
 
 // SetUsername sets the username used to execute the request.
@@ -21,13 +19,13 @@ func (r *hostelRequest) SetUsername(name string) {
 }
 
 // loginRequest request that logs clients in, in order to book, inspect and search free room.
-// Client cant login if the username is already logged in
+// Client can't login with the associated clientName if the username is already logged in
 type loginRequest struct {
 	hostelRequest
 	clientName string
 }
 
-// logoutRequest request that log client out, in order to change "account".
+// logoutRequest request that logs client out, in order to change "account".
 type logoutRequest struct {
 	hostelRequest
 }
@@ -46,7 +44,7 @@ type roomStateRequest struct {
 	nightNumber uint
 }
 
-// disponiblityRequest Request used to find a free room for a given night and duration.
+// disponibilityRequest request used to find a free room for a given night and duration.
 type disponibilityRequest struct {
 	hostelRequest
 	nightStart uint

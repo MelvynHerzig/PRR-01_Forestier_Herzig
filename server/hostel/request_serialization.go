@@ -1,4 +1,4 @@
-package request
+package hostel
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// MakeRequest analyzes incoming message to create request to hostel manager.
-// Clients request must contain the exact amount of arguments.
-func MakeRequest(req string) (bool, HostelRequestable) {
+// MakeRequest analyzes incoming message to create a hostelRequestable.
+// Returns false, nil, if req was not sufficient to form a hostelRequestable.
+func MakeRequest(req string) (bool, Request) {
 
 	trimReq := strings.TrimSpace(req)
 	splits := strings.Split(trimReq, " ")
@@ -87,22 +87,27 @@ func MakeRequest(req string) (bool, HostelRequestable) {
 	return false, nil
 }
 
+// Serialize transform a loginRequest into a string for communication protocol.
 func (r *loginRequest) Serialize() string{
 	return "LOGIN " + r.clientName
 }
 
+// Serialize transform a logoutRequest into a string for communication protocol.
 func (r *logoutRequest) Serialize() string{
 	return "LOGOUT " + r.username
 }
 
+// Serialize transform a bookRequest into a string for communication protocol.
 func (r *bookRequest) Serialize() string{
 	return fmt.Sprintf("BOOK %d %d %d %s", r.roomNumber, r.nightStart, r.duration, r.username)
 }
 
+// Serialize transform a roomStateRequest into a string for communication protocol.
 func (r *roomStateRequest) Serialize() string{
 	return fmt.Sprintf("ROOMLIST %d %s", r.nightNumber, r.username)
 }
 
+// Serialize transform a disponibilityRequest into a string for communication protocol.
 func (r *disponibilityRequest) Serialize() string{
 	return fmt.Sprintf("FREEROOM %d %d %s", r.nightStart, r.duration, r.username)
 }

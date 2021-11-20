@@ -1,6 +1,7 @@
 // Package clock implements lamport clock system
 package clock
 
+// timestamp is the local time
 var timestamp uint = 0
 
 // GetTimestamp returns the local timestamp

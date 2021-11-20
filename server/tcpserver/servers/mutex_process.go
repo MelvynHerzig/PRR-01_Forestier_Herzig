@@ -1,34 +1,33 @@
-// Package mutex handles access to critical section between servers
+// Package servers handles access to critical section between servers
 package servers
 
 import (
-	config "prr.configuration/reader"
+	"prr.configuration/config"
 	"server/tcpserver/servers/clock"
 )
 
 // Channels used for communication between client process and mutex process to manage critical section access
 var (
-	demand  chan struct{}
-	leave   chan struct{}
-	Allow   chan struct{} // to awake a client process waiting for critical section
+	demand  = make(chan struct{})
+	leave   = make(chan struct{})
+	allow   = make(chan struct{}) // to awake a client process waiting for critical section
 )
 
-// Channel used to get received mesage from network process.
-var onMessage chan Message
+// Channel used to get received message from network process.
+var onMessage = make(chan message)
 
 // Stores the messages of all servers
-var messages []Message
+var messages []message
 
-// mutexCore method executed in a go routine. It is responsible to be the mutex "engine".
-// Other thread can use the channels to pass
-func mutexCore() {
+// MutexCore method executed in a goroutine. It is responsible to be the mutex "engine".
+func MutexCore() {
 
 	// Stores the messages of all servers
-    messages = make([]Message, len(config.GetServers()))
+    messages = make([]message, len(config.GetServers()))
 
 	// Init the messages
 	for i := 0; i < len(messages); i++ {
-		messages[i] = Message{
+		messages[i] = message{
 			MessageType: REL,
 			Timestamp:   0,
 			SrcServer:   uint(i),
@@ -37,50 +36,54 @@ func mutexCore() {
 
 	for {
 		select {
-			case <-demand:
-			case <-leave:
-			case <-onMessage:
+			case _ = <-demand:
+				doDemand()
+			case _ = <-leave:
+				doLeave()
+			case msg := <-onMessage:
+				doHandleMessage(msg)
 		}
 	}
 }
 
-// Demand function called by client process to signal that it wants critical section access.
-func Demand() {
+// AccessMutex function called by client process to signal that it wants critical section access. May block.
+func AccessMutex() {
 	demand <- struct{}{}
+	<-allow
 }
 
-// Leave function called by client process to signal that it finished critical section
-func Leave() {
+// LeaveMutex function called by client process to signal that it finished critical section
+func LeaveMutex() {
 	leave <- struct{}{}
 }
 
 // HandleMessage function called by network process to signal that a message arrived.
-func HandleMessage(message Message) {
+func handleMessage(message message) {
 	onMessage <- message
 }
 
 // doDemand function called when client process ask for mutex
 func doDemand() {
 	clock.IncTimestamp()
-	message := Message{ MessageType: REQ,
+	message := message{ MessageType: REQ,
 		                     Timestamp: clock.GetTimestamp(),
 		                     SrcServer: config.GetLocalServerNumber()}
 	messages[config.GetLocalServerNumber()] = message
-	SendToAll(Serialize(message))
+	sendToAll(serialize(message))
 }
 
 // doLeave function called when client process leaves the mutex
 func doLeave() {
 	clock.IncTimestamp()
-	message := Message{ MessageType: REL,
+	message := message{ MessageType: REL,
 							 Timestamp: clock.GetTimestamp(),
 							 SrcServer: config.GetLocalServerNumber()}
 	messages[config.GetLocalServerNumber()] = message
-	SendToAll(Serialize(message))
+	sendToAll(serialize(message))
 }
 
 // doHandleMessage handles a mutex message incoming from distant server
-func doHandleMessage (msg Message) {
+func doHandleMessage (msg message) {
 	clock.SyncTimestamp(msg.Timestamp)
 
 	// Because we have implemented optimised version.
@@ -89,10 +92,10 @@ func doHandleMessage (msg Message) {
 
 	// Optimisation
 	if msg.MessageType == REQ && messages[config.GetLocalServerNumber()].MessageType != REQ {
-		response := Message{ MessageType: ACK,
+		response := message{ MessageType: ACK,
 								  Timestamp: clock.GetTimestamp(),
 								  SrcServer: config.GetLocalServerNumber()}
-		SendToOne(msg.SrcServer, Serialize(response))
+		sendToOne(msg.SrcServer, serialize(response))
 	}
 
 	checkCriticalSection()
@@ -120,5 +123,5 @@ func checkCriticalSection() {
 	}
 
 	// Signal client that he can enter
-	Allow <- struct{}{}
+	allow <- struct{}{}
 }

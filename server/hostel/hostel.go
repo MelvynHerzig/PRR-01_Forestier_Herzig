@@ -1,4 +1,6 @@
-// Package hostel is the job logic layer. It implements the hostel room managment.
+// Package hostel implements the hostel management. It provides a Manager function that can be executed as
+// a goroutine. It is possible to submit Request using the SubmitRequest function that returns
+// a HostelResponse.
 package hostel
 
 import (
@@ -6,16 +8,17 @@ import (
 	"strconv"
 )
 
-// Hostel This struct if the base struct defining a hostel.
-type Hostel struct {
-	rooms     [][]uint        // 0 freeRoom else client id
-	clients   map[string] *client
-	nbClients uint
-	nbRooms   uint
-	nbNights  uint
+// hostel is the base struct that defines a hostel.
+type hostel struct {
+	rooms     [][]uint               // 0 freeRoom else client id
+	clients   map[string] *client    // map of client name to their id and online status
+	nbClients uint					 // count of hostel registered clients, in other words len of clients
+	nbRooms   uint					 // number of rooms
+	nbNights  uint                   // number of nights supported by the planning
 }
 
-// Properties of a client, name is already stores in clients map.
+// client is the struct that is mapped to a client name in hostel.clients. It consists of a unique identifier and an
+// online status.
 type client struct {
 	id uint        // id from [0, max uint]
 	logged bool
@@ -24,13 +27,13 @@ type client struct {
 // freeRoom is the constant value stored in rooms to declare that the room is free.
 const freeRoom = 0
 
-// NewHostel creates a new hostel for a given amount of rooms and nights.
-func NewHostel(nbRooms, nbNights uint) (*Hostel, error) {
+// newHostel creates a new hostel for a given amount of rooms and nights.
+func newHostel(nbRooms, nbNights uint) (*hostel, error) {
 	if nbRooms == 0 || nbNights == 0 {
 		return nil, errors.New("number of rooms or number of nights cannot be 0")
 	}
 
-	hostel := new(Hostel)
+	hostel := new(hostel)
 
 	hostel.rooms = make([][]uint, nbRooms)
 	for room := range hostel.rooms {
@@ -44,8 +47,8 @@ func NewHostel(nbRooms, nbNights uint) (*Hostel, error) {
 	return hostel, nil
 }
 
-// Login logs a client in. If he doesn't already exist, the client is registered.
-func (h* Hostel) Login(name string) string {
+// Login logs a client in. If he doesn't already exist, the client is registered. Fails if client already logged.
+func (h* hostel) login(name string) string {
 
 	// Try to register client if he doesn't already exist
 	if _, ok := h.clients[name]; name != "" && ok == false {
@@ -62,9 +65,10 @@ func (h* Hostel) Login(name string) string {
 	}
 }
 
-// Book try to book a room for a given night and duration. Client name must be registered.
+// book try to book a room for a given night and duration. Client name must be registered.
 // Rooms are going from 1 to h.nbRooms. Nights are going from 1 to h.nbRooms. Duration cannot be 0.
-func (h *Hostel) Book(username string, noRoom, nightStart, duration uint) string {
+// Fails if username is not logged, noRoom is an invalid number or period (nightStart and duration) not valid.
+func (h *hostel) book(username string, noRoom, nightStart, duration uint) string {
 
 	// Checks
 	if ok, msg := h.checkClientLogged(username); ok == false {
@@ -99,9 +103,10 @@ func (h *Hostel) Book(username string, noRoom, nightStart, duration uint) string
 	return "RESULT_BOOK " + strRoom + " " + strNight + " " + strDuration
 }
 
-// GetRoomsState returns state for each rooms: "free", "self reserved" or "occupied". Client must be registered.
+// getRoomsState returns state for each room: "free", "self reserved" or "occupied". Client must be registered.
 // Nights are going from 1 to h.nbRooms.
-func (h *Hostel) GetRoomsState(username string, noNight uint) string {
+// Fails if username is not logged in or noNight in bounds of hostel planning.
+func (h *hostel) getRoomsState(username string, noNight uint) string {
 	// Checks
 	if ok, msg := h.checkClientLogged(username); ok == false {
 		return msg
@@ -132,9 +137,10 @@ func (h *Hostel) GetRoomsState(username string, noNight uint) string {
 	return "RESULT_ROOMLIST " + res
 }
 
-// SearchDisponibility looks for a free room starting from a given night during a given duration.
+// searchDisponibility looks for a free room starting from a given night during a given duration.
 // Nights are going from 1 to h.nbRooms. Duration cannot be 0.
-func (h *Hostel) SearchDisponibility(username string, nightStart, duration uint) string {
+// Fails if username is not logged or if the period (nightStart + duration) is not in hostel planning bounds.
+func (h *hostel) searchDisponibility(username string, nightStart, duration uint) string {
 
 	// Checks
 	if ok, msg := h.checkClientLogged(username); ok == false {
@@ -166,21 +172,22 @@ func (h *Hostel) SearchDisponibility(username string, nightStart, duration uint)
 	return "No free room found for this period"
 }
 
-// Logout logs a client out.
-func (h* Hostel) Logout(name string) string {
+// logout logs a client out.
+// Fails if client is not logged in
+func (h* hostel) logout(name string) string {
 
 	// Checks
 	if ok, msg := h.checkClientLogged(name); ok == false {
 		return msg
 	}
 
-	h.clients[name].logged = false;
+	h.clients[name].logged = false
 
 	return "RESULT_LOGOUT"
 }
 
 // checkClientLogged checks if the client is registered in hostel clients map. Returns nil if this is the case.
-func (h *Hostel) checkClientLogged(name string) (bool, string) {
+func (h *hostel) checkClientLogged(name string) (bool, string) {
 
 	if client, registered := h.clients[name]; registered == false || client.logged == false{
 		return false, "Client not logged"
@@ -190,7 +197,7 @@ func (h *Hostel) checkClientLogged(name string) (bool, string) {
 }
 
 // checkRoomNumber checks if the room number is between 1 and hostel number of rooms. Returns nil if this is the case.
-func (h *Hostel) checkRoomNumber(noRoom uint) (bool, string) {
+func (h *hostel) checkRoomNumber(noRoom uint) (bool, string) {
 
 	if noRoom == 0 || noRoom > h.nbRooms {
 		return false, "Invalid room number"
@@ -200,7 +207,7 @@ func (h *Hostel) checkRoomNumber(noRoom uint) (bool, string) {
 }
 
 // checkNightNumber checks if the night number is between 1 and hostel max night plan. Returns nil if this is the case.
-func (h *Hostel) checkNightNumber(noNight uint) (bool, string) {
+func (h *hostel) checkNightNumber(noNight uint) (bool, string) {
 
 	if noNight == 0 || noNight > h.nbNights {
 		return false, "Invalid night number"
@@ -210,7 +217,7 @@ func (h *Hostel) checkNightNumber(noNight uint) (bool, string) {
 }
 
 // checkPeriod checks if the duration starting from the given night is not going further than the hostel max night plan.
-func (h *Hostel) checkPeriod(noNight, duration uint) (bool, string) {
+func (h *hostel) checkPeriod(noNight, duration uint) (bool, string) {
 
 	if result, message := h.checkNightNumber(noNight); result == false {
 		return result, message

@@ -1,5 +1,4 @@
-// Package clients implements server side tcp logic.
-// It handles each client on a specific goroutine and manages access to hostel rooms.
+// Package clients implements logic to communicate with clients.
 package clients
 
 import (
@@ -7,18 +6,15 @@ import (
 	"fmt"
 	"log"
 	"net"
-	config "prr.configuration/reader"
+	"prr.configuration/config"
 	"server/hostel"
-	"server/hostel/request"
 	"server/tcpserver/servers"
-	"strconv"
 )
 
-// HandleClients starts client handler goroutine and hostel logic goroutine.
+// HandleClients starts a goroutine to handle concurrently the clients and accepts client connexions.
 func HandleClients (listener net.Listener) {
 
-	// Starting concurrent hostel manager.
-	go hostelManager(config.GetRoomsCount(), config.GetNightsCount())
+	go clientsManager()
 
 	// Listening for TCP connections.
 	for {
@@ -29,115 +25,107 @@ func HandleClients (listener net.Listener) {
 		}
 
 		// Starting handler for client connection.
-		go handleConnection(conn)
+		go clientHandler(conn)
 	}
 }
 
-// client to server messages channel.
+// client to server message channel.
 type client chan<- string
 
-// Messages passed from client handler to hostelManager
-type clientDemand struct {
-	ch     client
-	demand request.HostelRequestable
+// Messages passed from clientHandler to clientsManager
+type clientRequest struct {
+	ch      client         // channel to post response message
+	request hostel.Request // Request received
 }
 
+// Channels used between clientHandler and clientsManager
 var (
 	// leaving channel to notify clients that leave. Usually when clients shut down
 	leaving = make(chan client)
 
-	// clientDemands channel used by client handlers to transmit HostelRequestable. Need mutex access.
-	clientDemands = make(chan clientDemand)
+	// clientDemands channel used by client handlers to transmit Request. Need mutex access.
+	clientDemands = make(chan clientRequest)
 )
 
-// hostelManager concurrency safe function that handles hostel rooms management.
-func hostelManager(nbRooms, nbNights uint) {
+// clientsManager is a function to start in a goroutine. It uses the Communicating sequential process in order to handle
+// client concurrently. When a request is received, it asks for mutex access before submitting it to Manager.
+func clientsManager() {
 
-	// All connected client with their unique name, on entering string is "".
+	// All connected client sessions with their unique name, on entering string is "".
 	clients := make(map[client]string)
 
-	hostelManager, hostelError := hostel.NewHostel(nbRooms, nbNights)
-	if hostelError != nil {
-		log.Fatal(hostelError)
-	}
-
-	waitingMutex := false
-	
 	// Handling clients.
 	for {
-
 		select {
+
 		case clientDemand := <-clientDemands:
 
-			// TODO call demande (Processus client -> processus mutex)
-			servers.Demand()
-			waitingMutex = true
+			servers.AccessMutex() // May block
 
-			// Getting session client name ans assigning it to request.
+			// Getting session client name and assigning it to request. If client is not logged, will be "".
 			if _, exists := clients[clientDemand.ch]; exists {
-				clientDemand.demand.SetUsername(clients[clientDemand.ch])
+				clientDemand.request.SetUsername(clients[clientDemand.ch])
 			}
 
-			// TODO call attente (Processus client -> processus mutex)
+			response := hostel.SubmitRequest(clientDemand.request)
 
-			success, username, message := clientDemand.demand.Execute(hostelManager)
+			// If request succeed, we replicate the state in other servers, and we set the name used in the request
+			// and in the session.
+			if response.Success {
 
-			// If request succeed, we replicate, we set the name associated to client.
-			if success {
+				servers.Replicate(clientDemand.request)
 
-				// TODO replicate
-
-				clients[clientDemand.ch] = username
-				clientDemand.ch <- message
+				clients[clientDemand.ch] = response.Username
+				clientDemand.ch <- response.Message
 			} else {
-				sendError(clientDemand.ch, message)
+				sendError(clientDemand.ch, response.Message)
 			}
 
-			// TODO call fin (Processus client -> processus mutex)
+			servers.LeaveMutex()
 
 		case cli := <-leaving:
+
+			// We remove client session
 			delete(clients, cli)
 			close(cli)
+
 		}
 	}
 }
 
-// handleConnection handles client communication. Listen and write to clients or hostel Manager
-func handleConnection(conn net.Conn) {
+// clientHandler handles client communication. Listen and write to clients or clientsManager
+func clientHandler(conn net.Conn) {
 	ch := make(chan string) // bidirectional
 
 	// Starting client writer
 	go func() {
-		for msg := range ch { // client writer <- hostelManager / handleConnection
+		for msg := range ch { // client writer <- clientsManager / clientHandler
 			_, _ = fmt.Fprintln(conn, msg) // TCP Client <- client writer
 		}
 	}()
 
-	strRooms  := strconv.FormatUint(uint64(config.GetRoomsCount()) , 10)
-	strNights := strconv.FormatUint(uint64(config.GetNightsCount()), 10)
-
-	ch <- "WELCOME Welcome in the FH Hostel ! Nb rooms: "  + strRooms + ", nb nights: " + strNights +
-		"- LOGIN <userName>" +
-		"- LOGOUT" +
-		"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
-		"- ROOMLIST <night>" +
-		"- FREEROOM <arrivalNight> <nbNights>"
+	ch <- fmt.Sprintf("WELCOME Welcome in the FH Hostel ! Nb rooms: %v, nb nights: %v" +
+					"- LOGIN <userName>" +
+					"- LOGOUT" +
+					"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
+					"- ROOMLIST <night>" +
+					"- FREEROOM <arrivalNight> <nbNights>", config.GetRoomsCount(), config.GetNightsCount())
 
 	// Scanning incoming client message.
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
 
-		goodRequest, req := request.MakeRequest(input.Text())
+		goodRequest, req := hostel.MakeRequest(input.Text())
 
 		if goodRequest {
-			clientDemands <- clientDemand{ch, req}
+			clientDemands <- clientRequest{ch, req}
 		} else {
-			sendError(ch, "Unknown request")
+			sendError(ch, "Unknown communication")
 		}
 	}
 
 	leaving <- ch
-	conn.Close()
+	_ = conn.Close()
 }
 
 // sendError sends errors to client with error prefix ("ERROR").

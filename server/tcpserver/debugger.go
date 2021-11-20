@@ -21,18 +21,18 @@ package tcpserver
 //	debugLog("SAFE) " + message)
 //}
 //
-//// LogRequestResult logs if request is a success or failed depending on success argument.
-//func LogRequestResult(request clients.HostelRequestable, success bool) {
+//// LogRequestResult logs if communication is a success or failed depending on success argument.
+//func LogRequestResult(communication clients.HostelRequestable, success bool) {
 //	if success {
-//		LogRisk(request.ToString() + " SUCCESS ")
+//		LogRisk(communication.ToString() + " SUCCESS ")
 //	} else {
-//		LogRisk(request.ToString() + " ERROR ")
+//		LogRisk(communication.ToString() + " ERROR ")
 //	}
 //}
 //
-//// LogRequestHandling  logs that request handle is starting.
-//func LogRequestHandling(request clients.HostelRequestable) {
-//	LogRisk(request.ToString() + " HANDLING ")
+//// LogRequestHandling  logs that communication handle is starting.
+//func LogRequestHandling(communication clients.HostelRequestable) {
+//	LogRisk(communication.ToString() + " HANDLING ")
 //}
 //
 //// debugLog logs the message with DEBUG >> prefix.

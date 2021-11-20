@@ -5,20 +5,33 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6ae6040d-3dba-43b7-b335-6416830d78dc" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../Client/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/../Client/go.mod" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/hostel/hostel_manager.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/hostel/request_execution.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../server/hostel/response.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Client/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../Client/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Client/tcpclient/tcp_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/../Client/tcpclient/tcp_client.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../client/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../client/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config 3 servers save.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config.json" beforeDir="false" afterPath="$PROJECT_DIR$/../config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/reader/reader.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/reader.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_execution.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_prototypes.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_serialization.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request_serialization.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_stringify.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request_stringify.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/debugger.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/debugger.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/servers/handle_servers.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/servers/handle_servers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/tcpserver/servers/mutex_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/servers/mutex_process.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="GOROOT" url="file://C:/Program Files/Go" />
+  <component name="GOROOT" url="file://D:/Program Files/Go" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
@@ -45,30 +58,20 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
   </component>
-  <component name="RunManager">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="configuration" />
-      <working_directory value="$PROJECT_DIR$" />
-      <go_parameters value="-i" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="configuration" />
-      <working_directory value="$PROJECT_DIR$" />
-      <go_parameters value="-i" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

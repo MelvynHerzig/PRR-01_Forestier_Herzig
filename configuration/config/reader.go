@@ -1,4 +1,4 @@
-package reader
+package config
 
 import (
 	"encoding/json"
@@ -54,7 +54,7 @@ func InitSimple(path string) {
 // IsDebug Return the value of debug in config file
 func IsDebug() bool {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	return reader.Debug
@@ -63,7 +63,7 @@ func IsDebug() bool {
 // GetRoomsCount Return the number of rooms specified in the config file
 func GetRoomsCount() uint {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	return reader.NbRooms
@@ -72,7 +72,7 @@ func GetRoomsCount() uint {
 // GetNightsCount Return the number of nights specified in the config file
 func GetNightsCount() uint {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	return reader.NbNights
@@ -81,7 +81,7 @@ func GetNightsCount() uint {
 // GetServerById Return the server corresponding to the specified id
 func GetServerById(id uint) *Server {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	if id >= uint(len(reader.Servers)) {
@@ -94,7 +94,7 @@ func GetServerById(id uint) *Server {
 // GetServerRandomly Return a server from the servers list
 func GetServerRandomly() *Server {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	return GetServerById(uint(rand.Intn(len(reader.Servers))))
@@ -103,7 +103,7 @@ func GetServerRandomly() *Server {
 // GetServers Return all servers from the list
 func GetServers() []Server {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	return reader.Servers
@@ -112,7 +112,7 @@ func GetServers() []Server {
 // IsServerIP Check if the ip sent correspond to one of the server in the config file
 func IsServerIP(address string) bool {
 	if reader == nil {
-		log.Fatal("reader not initialized")
+		log.Fatal("config not initialized")
 	}
 
 	var ip = strings.Split(address, ":")[0]
