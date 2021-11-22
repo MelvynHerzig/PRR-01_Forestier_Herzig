@@ -10,36 +10,63 @@ Respository du laboratoire 01 pour le cours PRR
 * Cloner le répertoire.
 > `$ git clone https://github.com/MelvynHerzig/PRR-01_Forestier_Herzig.git`
 
-* Démarrer le serveur. Trois arguments sont nécessaires.
-  * Nombre de chambres dans l'hôtel (obligatoire).
-  * Nombre de nuits dans l'hôtel (obligatoire).
-  * -debug pour lancer en mode debug (facultatif).
+* Remplir le fichier de configuration _config.json_ à la racine du projet.
+  * debug ( booléen, true/false ): Pour lancer les serveurs en mod debug
+  * nbRooms ( nombre, entre 1 et N ): Pour définir le nombre de chambres supportées par l'hôtel
+  * nbNights ( nombre, entre 1 et N): Pour définir le nombre de nuits supportées par l'hôtel
+  * servers ( ip et port, minimum 1 serveur): Pour définir les adresses et ports du cluster de serveurs de gestion de l'hôtel
+```
+{
+  "debug": true,
+  "nbRooms":10,
+  "nbNights":10,
+  "servers": [
+    {
+      "ip": "127.0.0.1",
+      "port": 3000
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3001
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3002
+    }
+  ]
+}
+```
+> La configuration précédente est un exemple.
+
+* Démarrer le(s) serveur(s). Un argument est nécessaire.
+  * Entre 0 et N-1 avec N = nombres de serveurs configurés dans _config.json_
 
 > Depuis le dossier <i>server</i>.
 >
-> Pour lancer un serveur avec 10 chambres sur 10 nuits sans debug: </br>
-> `$ go run . 10 10`
+> En admettant le fichier de configuration précédent:\
+> `$ go run . 1`\
+> `$ go run . 2`\
+> `$ go run . 0`
 >
-> Pour lancer un serveur avec 5 chambres sur 20 nuits avec debug: </br>
-> `$ go run . 5 20 -debug`
+> L'ordre de démarrage importe peu. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration.
 
-* Démarrer le(s) client(s). Un argument est nécessaire.
-  * Adresse ip du serveur. 
+* Démarrer le(s) client(s). Un argument est facultatif.
+  * Numéro du serveur distant auquel se connecter.
 
 > Depuis le dossier <i>client</i>.
 >
-> Pour lancer un client qui se connecte à un serveur sur la même machine.\
-> `$ go run . localhost`
+> Pour lancer un client qui se connecte à serveur 0.\
+> `$ go run . 0`
 >
-> Pour lancer un client qui se connecte à un serveur à l'adresse 1.2.3.4\
-> `$ go run . 1.2.3.4`
+> Pour lancer un client qui se connecte à un serveur aléatoire trouvable dans le fichier _config.json_\
+> `$ go run .`
 
 # Utilisation
 __Fonctionne__\
 Toutes les fonctionnalités de la donnée ont été implémentées avec succès.
 
 __Ne fonctionne pas__\
-Rien
+Rien à notre connaissance.
 
 ## Serveur
 Une fois le serveur lancé, aucune action supplémentaire est nécessaire.
@@ -62,7 +89,7 @@ Au démarrage, les clients reçoivent la bienvenue du serveur sous cette forme:
 
 ### LOGIN
 ` LOGIN <userName>`</br>
-Première commande à effectuer. Les autres commandes ne fonctionnement pas tant que l'authentification avec un nom d'utilisateur n'a pas été exécutée. Les noms d'utilisateur sont supposés unique. En conséquence, deux utilisateurs avec le même nom ne doivent pas s'authentifier simultanément.
+Première commande à effectuer. Les autres commandes ne fonctionnement pas tant que l'authentification avec un nom d'utilisateur n'a pas été exécutée. Les noms d'utilisateur sont supposés unique. En conséquence, deux utilisateurs avec le même nom ne peuvent pas s'authentifier simultanément.
 
 En cas de succès, l'utilisateur reçoit:
 > `Login success` </br>
@@ -128,9 +155,9 @@ L'application a été testée et validée sous les environnements Windows et Lin
 
 La compatibilité MacOS n'a pas pu être contrôlée mais devrait être possible. Seules les fonctionnalités de base de Golang ont été utilisées.
 
-# Protocole de communication TCP
+# Protocole de communication TCP client-serveur
 ## Comment le client trouve le serveur (adresses et ports)?
-Le serveur utilise son adresse localhost et le port 8000.
+Le client sélectionne un serveur dans le fichier _config.json_ aléatoirement ou manuellement avec son numéro.
 
 ## Qui parle en premier ? 
 Le serveur parle en premier lorsque le client parvient à se connecter.</br>
@@ -141,7 +168,7 @@ Le client ferme la connexion lorsqu'il termine son exécution.
 
 ## Qu'est ce qui se passe quand un message est reçu?
 ### Serveur
-Le serveur récupère le premier mot de la requête. Si le mot est syntaxiquement:
+Le serveur récupère le premier mot de la requête. Si le premier mot est syntaxiquement:
 * Inconnu: Envoie une erreur. (context non concurrent)
 * Connu: Tente de former la suite de la requête. (context non concurrent)
 
@@ -160,7 +187,7 @@ Le client récupère le premier mot de la réponse. Il détermine si c'est:
 |---|----|
 | S'identifier à l'hôtel | LOGIN {nom de l'utilisateur} CRLF |
 | Réserver une chambre | BOOK {numéro de chambre} {nuit d'arrivée} {nombre de nuits} CRLF  |
-| Récupérer la liste des disponnibilités pour une nuit. | ROOMLIST {numéro de nuit}  CRLF  |
+| Récupérer la liste des disponnibilités pour une nuit. | ROOMLIST {numéro de nuit} CRLF  |
 | Recevoir un numéro de chambre libre pour un nombre de nuits à partir d'une nuit d'arrivée. | FREEROOM {nuit d'arrivée} {nombre de nuit} CRLF  |
 | Se déconnecter. | LOGOUT CRLF |
 
@@ -207,6 +234,77 @@ Client : <br>
 `LOGOUT CRLF`\
 Server : <br>
 `RESULT_LOGOUT CRLF`
+
+# Protocole de communication TCP serveur-serveur
+Au démarrage, les serveurs doivent s'attendre pour ouvrir des connexions avant de commencer à traiter les clients.
+
+## Comment serveur trouve un autre serveur (adresses et ports)?
+Le serveur interroge le fichier _config.json_.
+
+## Qui parle en premier ? 
+Les serveurs de numéros M se connectent aux serveur de numéro 0 - N avec N < M. Les serveurs de numéro M transmettent leur numéro M de serveur.
+
+## Qui ferme la connexion et quand?
+Les serveurs ne ferment la connexion que si tout le cluster doit s'arrêter. Théoriquement, jamais.
+
+## Qu'est ce qui se passe quand un message est reçu?
+### Serveur
+Le serveur récupère le premier mot de la requête et vérifie si il correspond à:
+* Premier mot d'une requête client-serveur: il applique immédiatement la requête sur ses données.
+* Confirmation de réplication: il signal au travers d'un canal spécialisé qu'une confirmation de réplication a été reçue.
+* Premier mot d'un message de l'algorithme de lamport: il forme le message et le transmet au mutex.
+
+## Syntaxe des messages de réplication
+### Requête
+| Utilité | Syntaxe |
+|---|----|
+| S'identifier à l'hôtel | LOGIN {nom de l'utilisateur} CRLF |
+| Réserver une chambre | BOOK {numéro de chambre} {nuit d'arrivée} {nombre de nuits} {nom de l'utilisateur mendant} CRLF  |
+| Récupérer la liste des disponnibilités pour une nuit. | ROOMLIST {numéro de nuit} {nom de l'utilisateur mendant} CRLF  |
+| Recevoir un numéro de chambre libre pour un nombre de nuits à partir d'une nuit d'arrivée. | FREEROOM {nuit d'arrivée} {nombre de nuit} {nom de l'utilisateur mendant} CRLF  |
+| Se déconnecter. | LOGOUT {nom de l'utilisateur mendant} CRLF |
+
+> À noter: les requêtes qui ne peuvent pas être traitées localement ne seront pas répliquées.
+
+### Réponse
+| Utilité | Syntaxe |
+|---|----|
+| Réponse positive à une réplication | OK CRLF |
+
+## Syntaxe des messages de Lamport
+| Utilité | Syntaxe |
+|---|----|
+| Acknowledgement | ACK {server local timestamp} {server local number} CRLF |
+| Mutex demand | REQ {server local timestamp} {server local number} CRLF |
+| Mutex release | REL {server local timestamp} {server local number} CRLF |
+
+> La version optimisée a été implémentée: un ack est envoyé par un serveur i seulement si son dernier message envoyé n'est pas un req.
+
+## Exemple d'une conversation entre 2 serveurs Server0 et Server1
+
+_Synchronisation (une fois au démarrage)_ 
+
+Server1 : <br>
+`1`
+
+_Demande de mutex_
+
+Server0 : <br>
+`REQ 1 0`\
+Server1 : <br> 
+`ACK 2 1`\
+
+_Réplication_
+
+Server0 : <br>
+`BOOK 1 1 2 Pierre`\
+Server1 : <br> 
+`OK`\
+
+_Relâchement de mutex_
+
+Server0 : <br>
+`REL 5 0`\
 
 ## Tests
 Un program de tests a été mis en place. Le programme de test se
