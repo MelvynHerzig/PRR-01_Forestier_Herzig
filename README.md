@@ -292,19 +292,19 @@ _Demande de mutex_
 Server0 : <br>
 `REQ 1 0`\
 Server1 : <br> 
-`ACK 2 1`\
+`ACK 2 1`
 
 _Réplication_
 
 Server0 : <br>
 `BOOK 1 1 2 Pierre`\
 Server1 : <br> 
-`OK`\
+`OK`
 
 _Relâchement de mutex_
 
 Server0 : <br>
-`REL 5 0`\
+`REL 5 0`
 
 ## Tests
 Un program de tests a été mis en place. Le programme de test se
