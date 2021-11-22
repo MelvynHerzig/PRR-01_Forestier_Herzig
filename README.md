@@ -271,39 +271,40 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 |---|----|
 | Réponse positive à une réplication | OK CRLF |
 
-## Exemple d'une conversation entre client et serveur tcp
-Server : </br>
-` Welcome in the FH Hotel ! Nb rooms: 10, nb nights: 10 ` <br>
-`Available commands:` <br>
-`-  LOGIN userName` <br>
-`-  LOGOUT` <br>
-`-  BOOK roomNumber arrivalNight nbNights` <br>
-`-  ROOMLIST night` <br>
-`-  FREEROOM arrivalNight nbNights CRLF` <br>
-Client : <br> 
-`LOGIN John CRLF`\
-Server : <br>
-`RESULT_LOGIN CRLF`\
-Client : <br> 
-`ROOMLIST 1 CRLF`\
-Server :\
-`RESULT_ROOMLIST Free, Occupied, Free, Self reserved CRLF`\
-Client :\
-`FREEROOM 1 2 CRLF`\
-Server :\
-`RESULT_FREEROOM 1 1 2 CRLF`\
-Client :\
-`BOOK 1 1 2 CRLF`\
-Server :\
-`RESULT_BOOK OK CRLF`\
-Client :\
-`BOOK 1 1 2 CRLF`\
-Server :\
-`ERROR room already booked CRLF`\
-Client : <br> 
-`LOGOUT CRLF`\
-Server : <br>
-`RESULT_LOGOUT CRLF`
+## Syntaxe des messages de Lamport
+| Utilité | Syntaxe |
+|---|----|
+| Acknowledgement | ACK {server local timestamp} {server local number} CRLF |
+| Mutex demand | REQ {server local timestamp} {server local number} CRLF |
+| Mutex release | REL {server local timestamp} {server local number} CRLF |
+
+> La version optimisée a été implémentée: un ack est envoyé par un serveur i seulement si son dernier message envoyé n'est pas un req.
+
+## Exemple d'une conversation entre 2 serveurs Server0 et Server1
+
+_Synchronisation (une fois au démarrage)_ 
+
+Server1 : <br>
+`1`
+
+_Demande de mutex_
+
+Server0 : <br>
+`REQ 1 0`\
+Server1 : <br> 
+`ACK 2 1`\
+
+_Réplication_
+
+Server0 : <br>
+`BOOK 1 1 2 Pierre`\
+Server1 : <br> 
+`OK`\
+
+_Relâchement de mutex_
+
+Server0 : <br>
+`REL 5 0`\
 
 ## Tests
 Un program de tests a été mis en place. Le programme de test se
