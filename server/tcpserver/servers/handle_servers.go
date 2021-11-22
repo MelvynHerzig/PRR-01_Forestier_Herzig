@@ -46,7 +46,7 @@ func Sync(listener net.Listener) {
 		connections[otherServ] = conn
 	}
 
-	// WaitMutex for others to connect ( bigger numbers)
+	// Wait for others to connect ( bigger numbers)
 	for otherServ := localServerNumber + 1; otherServ < uint(len(config.GetServers())); otherServ++ {
 		var conn net.Conn
 		var err error
