@@ -73,7 +73,9 @@ func clientsManager() {
 			// and in the session.
 			if response.Success {
 
-				servers.Replicate(clientDemand.request)
+				if clientDemand.request.ShouldReplicate() {
+					servers.Replicate(clientDemand.request)
+				}
 
 				clients[clientDemand.ch] = response.Username
 				clientDemand.ch <- response.Message

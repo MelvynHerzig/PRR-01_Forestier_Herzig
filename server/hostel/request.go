@@ -3,6 +3,7 @@ package hostel
 // Request interface of communication that can be submitted to Manager with SubmitRequest.
 type Request interface {
 	execute(h *hostel) Response
+	ShouldReplicate() bool
 	ToString() string
 	SetUsername(name string)
 	Serialize() string
