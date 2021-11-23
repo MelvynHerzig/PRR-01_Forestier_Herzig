@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"server/tcpserver/clients"
+	"prr.configuration/config"
 	"strings"
 	"testing"
 )
@@ -17,31 +17,31 @@ var reader *bufio.Reader
 // setupSuite setups the tests environment. Starts the server and creates the tcp connection.
 func setupSuite(tb testing.TB) func(tb testing.TB) {
 	log.Println("Setup suite")
+	log.Println("These tests are made to test a clean instance of server. Please be sure every server is restarted before executing these tests.")
 
-	_, e := net.Dial("tcp", "localhost:8000")
-	if e == nil {
-		log.Fatal("Port 8000 needed to run test. Please shutdown all application using it before running test.")
+	config.InitSimple("../config.json")
+	if config.GetRoomsCount() != 2 {
+		log.Fatal("Tests are made to work when the number of rooms = 2 because 1 is not enough, and with more room, it is harder to fill the hostel.\n" +
+			"Please change your config.json and restart all servers")
 	}
 
-	// Starting TCP Server.
-	listener, serverErr := net.Listen("tcp", "localhost:8000")
-	if serverErr != nil {
-		log.Fatal(serverErr)
+	if config.GetNightsCount() > 10 {
+		log.Fatal("Limits are hardcoded, it means the number of nights can't be more than 10")
 	}
 
-	go clients.HandleClients(listener)
+	server := config.GetServerRandomly()
+	var err error
 
 	// Connection
-	conn, dialErr := net.Dial("tcp", "localhost:8000")
-	if dialErr != nil {
-		log.Fatal(dialErr)
+	conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", server.Ip, server.Port))
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	reader = bufio.NewReader(conn)
 
 	// Read server introduction (useless for testing)
 	reader.ReadString('\n')
-
 
 	return func(tb testing.TB) {
 		log.Println("Teardown suite")
@@ -77,7 +77,6 @@ func TestServerRequest(t *testing.T) {
 		{"BOOK without argument", "BOOK", "ERROR"},
 		{"BOOK with 1 argument", "BOOK 1", "ERROR"},
 		{"BOOK with 2 arguments", "BOOK 1 1", "ERROR"},
-		{"BOOK with more than 3 arguments", "BOOK 1 1 1 1", "ERROR"},
 
 		// Test negative arguments
 		{"BOOK with negative first argument", "BOOK -1 1 1", "ERROR"},
@@ -85,35 +84,30 @@ func TestServerRequest(t *testing.T) {
 		{"BOOK with negative third argument", "BOOK 1 1 -1", "ERROR"},
 
 		// Test with bad arguments
-		{"BOOK with bad room", "BOOK 3 1 1", "ERROR"},
-		{"BOOK with bad day", "BOOK 1 3 1", "ERROR"},
-		{"BOOK with bad duration", "BOOK 1 1 3", "ERROR"},
-
+		{"BOOK with bad room", "BOOK 11 1 1", "ERROR"},
+		{"BOOK with bad day", "BOOK 1 11 1", "ERROR"},
+		{"BOOK with bad duration", "BOOK 1 1 11", "ERROR"},
 
 		/////////////////////// FREEROOM COMMAND WITH BAD ARGUMENTS /////////////////////////
 		{"FREEROOM without argument", "FREEROOM", "ERROR"},
 		{"FREEROOM with 1 argument", "FREEROOM 1", "ERROR"},
-		{"FREEROOM with more than 2 arguments", "FREEROOM 1 1 1", "ERROR"},
 
 		// Test negative arguments
 		{"FREEROOM with negative first argument", "FREEROOM -1 1", "ERROR"},
 		{"FREEROOM with negative second argument", "FREEROOM 1 -1", "ERROR"},
 
 		// Test with bad arguments
-		{"FREEROOM with bad arrival", "FREEROOM 3 1", "ERROR"},
-		{"FREEROOM with bad duration", "FREEROOM 1 3", "ERROR"},
+		{"FREEROOM with bad arrival", "FREEROOM 11 1", "ERROR"},
+		{"FREEROOM with bad duration", "FREEROOM 1 11", "ERROR"},
 
 		/////////////////////// ROOMLIST COMMAND WITH BAD ARGUMENTS /////////////////////////
 		{"ROOMLIST without argument", "ROOMLIST", "ERROR"},
-		{"ROOMLIST with more than 1 arguments", "ROOMLIST 1 1", "ERROR"},
 
 		// Test negative arguments
 		{"ROOMLIST with negative argument", "ROOMLIST -1", "ERROR"},
 
 		// Test with bad arguments
-		{"ROOMLIST with bad arrival", "ROOMLIST 3", "ERROR"},
-
-
+		{"ROOMLIST with bad arrival", "ROOMLIST 11", "ERROR"},
 
 		// All following tests should be run with clean server and follow this order
 		{"ROOMLIST ONLY FREE", "ROOMLIST 1", "Free,Free"},
@@ -132,8 +126,7 @@ func TestServerRequest(t *testing.T) {
 		{"BOOK other room", "BOOK 2 1 1", "RESULT_BOOK"},
 		{"ROOMLIST with own reservation", "ROOMLIST 1", "Occupied,Self reserved"},
 
-		{"FREEROOM on full booked day", "FREEROOM 1 1", "RESULT_FREEROOM 0"},
-
+		{"FREEROOM on full booked day", "FREEROOM 1 1", "No free room"},
 	}
 
 	for _, tc := range table {
