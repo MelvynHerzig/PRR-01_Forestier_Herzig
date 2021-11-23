@@ -1,5 +1,5 @@
-# PRR-01_Forestier_Herzig
-Respository du laboratoire 01 pour le cours PRR
+# PRR-02_Forestier_Herzig
+Respository du laboratoire 02 pour le cours PRR
 
 # Étudiants
 - Forestier Quentin
