@@ -264,7 +264,7 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 | Recevoir un numéro de chambre libre pour un nombre de nuits à partir d'une nuit d'arrivée. | FREEROOM {nuit d'arrivée} {nombre de nuit} {nom de l'utilisateur mendant} CRLF  |
 | Se déconnecter. | LOGOUT {nom de l'utilisateur mendant} CRLF |
 
-> À noter: les requêtes qui ne peuvent pas être traitées localement ne seront pas répliquées.
+> À noter: Seules les requêtes de LOGIN, BOOK et LOGOUT sont répliquées. De plus, les requêtes qui ne peuvent pas être traitées localement ne seront pas répliquées.
 
 ### Réponse
 | Utilité | Syntaxe |
