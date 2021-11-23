@@ -1,5 +1,5 @@
-# PRR-01_Forestier_Herzig
-Respository du laboratoire 01 pour le cours PRR
+# PRR-02_Forestier_Herzig
+Respository du laboratoire 02 pour le cours PRR
 
 # Étudiants
 - Forestier Quentin
@@ -306,12 +306,11 @@ _Relâchement de mutex_
 Server0 : <br>
 `REL 5 0`
 
-## Tests
-Un program de tests a été mis en place. Le programme de test se
-comporte comme un seul client. Toutes les requêtes au serveur sont testées avec leurs retours
+# Tests automatique
+Un program de tests a été mis en place. Le programme de tests se comporte comme un seul client. Toutes les requêtes, qu'un client peut émettre, sont testées avec leurs retours
 positifs (pas d’erreurs) et négatifs (paramètres incorrects, indisponibilités, …). 
-Le programme de test lance un serveur automatiquement, ainsi pour que l'exécution
-se déroule correctement, il ne faut pas avoir executé `$go run .` avant de lancer les tests.
+
+Pour que le programme de tests fonctionne, il faut lancer trois serveurs conformément à la section **Installation** tout en utilisant le fichier de configuration _config.json_ qui y est présenté.
 
 Pour lancer les tests, depuis le dossier <i>server</i>, exécuter la commande: `$go test -v`
 
