@@ -107,7 +107,6 @@ func serverHandler(conn net.Conn) {
 			fmt.Fprintln(conn, confirmReplication)
 
 		} else { // or mutex access management
-
 			handleMessage(deserialize(input.Text()))
 		}
 	}

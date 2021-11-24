@@ -28,7 +28,6 @@ func MakeRequest(str string, mayContainUsername bool) (bool, Request) {
 		return false, nil
 	}
 
-
 	// Forming request
 	var responseReq Request
 
@@ -50,7 +49,7 @@ func MakeRequest(str string, mayContainUsername bool) (bool, Request) {
 		arrivalNight, err2 := strconv.ParseUint(splits[2], 10, 0)
 		nbNights,     err3 := strconv.ParseUint(splits[3], 10, 0)
 		if err1 != nil || err2 != nil || err3 != nil {
-			break
+			return false, nil
 		}
 
 		req.roomNumber = uint(roomNumber)
@@ -63,7 +62,7 @@ func MakeRequest(str string, mayContainUsername bool) (bool, Request) {
 
 		night, err := strconv.ParseUint(splits[1], 10, 0)
 		if err != nil {
-			break
+			return false, nil
 		}
 
 		req.nightNumber = uint(night)
@@ -75,7 +74,7 @@ func MakeRequest(str string, mayContainUsername bool) (bool, Request) {
 		arrivalNight, err1 := strconv.ParseUint(splits[1], 10, 0)
 		nbNights  , err2 := strconv.ParseUint(splits[2], 10, 0)
 		if err1 != nil || err2 != nil  {
-			break
+			return false, nil
 		}
 
 		req.nightStart = uint(arrivalNight)

@@ -8,11 +8,13 @@ import (
 	"net"
 	"prr.configuration/config"
 	"server/hostel"
+	"server/tcpserver"
 	"server/tcpserver/servers"
+	"time"
 )
 
 // HandleClients starts a goroutine to handle concurrently the clients and accepts client connexions.
-func HandleClients (listener net.Listener) {
+func HandleClients(listener net.Listener) {
 
 	go clientsManager()
 
@@ -56,11 +58,21 @@ func clientsManager() {
 
 	// Handling clients.
 	for {
+
 		select {
 
 		case clientDemand := <-clientDemands:
+			tcpserver.LogRisk("--------- Enter shared zone ---------")
 
 			servers.AccessMutex() // May block
+
+			if config.IsDebug() {
+				for i := 0; i < 10; i++ {
+					fmt.Print("-")
+					time.Sleep(time.Second)
+				}
+				fmt.Println()
+			}
 
 			// Getting session client name and assigning it to request. If client is not logged, will be "".
 			if _, exists := clients[clientDemand.ch]; exists {
@@ -92,6 +104,7 @@ func clientsManager() {
 			close(cli)
 
 		}
+		tcpserver.LogRisk("--------- Leave shared zone ---------")
 	}
 }
 
@@ -106,12 +119,12 @@ func clientHandler(conn net.Conn) {
 		}
 	}()
 
-	ch <- fmt.Sprintf("WELCOME Welcome in the FH Hostel ! Nb rooms: %v, nb nights: %v" +
-					"- LOGIN <userName>" +
-					"- LOGOUT" +
-					"- BOOK <roomNumber> <arrivalNight> <nbNights>" +
-					"- ROOMLIST <night>" +
-					"- FREEROOM <arrivalNight> <nbNights>", config.GetRoomsCount(), config.GetNightsCount())
+	ch <- fmt.Sprintf("WELCOME Welcome in the FH Hostel ! Nb rooms: %v, nb nights: %v"+
+		"- LOGIN <userName>"+
+		"- LOGOUT"+
+		"- BOOK <roomNumber> <arrivalNight> <nbNights>"+
+		"- ROOMLIST <night>"+
+		"- FREEROOM <arrivalNight> <nbNights>", config.GetRoomsCount(), config.GetNightsCount())
 
 	// Scanning incoming client message.
 	input := bufio.NewScanner(conn)
@@ -134,5 +147,3 @@ func clientHandler(conn net.Conn) {
 func sendError(ch client, err string) {
 	ch <- "ERROR " + err
 }
-
-

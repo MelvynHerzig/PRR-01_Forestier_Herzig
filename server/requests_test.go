@@ -77,6 +77,7 @@ func TestServerRequest(t *testing.T) {
 		{"BOOK without argument", "BOOK", "ERROR"},
 		{"BOOK with 1 argument", "BOOK 1", "ERROR"},
 		{"BOOK with 2 arguments", "BOOK 1 1", "ERROR"},
+		{"BOOK with more than 3 arguments", "BOOK 1 1 1 1", "ERROR"},
 
 		// Test negative arguments
 		{"BOOK with negative first argument", "BOOK -1 1 1", "ERROR"},
@@ -91,6 +92,7 @@ func TestServerRequest(t *testing.T) {
 		/////////////////////// FREEROOM COMMAND WITH BAD ARGUMENTS /////////////////////////
 		{"FREEROOM without argument", "FREEROOM", "ERROR"},
 		{"FREEROOM with 1 argument", "FREEROOM 1", "ERROR"},
+		{"FREEROOM with more than 2 arguments", "FREEROOM 1 1 1", "ERROR"},
 
 		// Test negative arguments
 		{"FREEROOM with negative first argument", "FREEROOM -1 1", "ERROR"},
@@ -102,6 +104,8 @@ func TestServerRequest(t *testing.T) {
 
 		/////////////////////// ROOMLIST COMMAND WITH BAD ARGUMENTS /////////////////////////
 		{"ROOMLIST without argument", "ROOMLIST", "ERROR"},
+		{"ROOMLIST with more than 1 arguments", "ROOMLIST 1 1", "ERROR"},
+
 
 		// Test negative arguments
 		{"ROOMLIST with negative argument", "ROOMLIST -1", "ERROR"},
@@ -126,7 +130,7 @@ func TestServerRequest(t *testing.T) {
 		{"BOOK other room", "BOOK 2 1 1", "RESULT_BOOK"},
 		{"ROOMLIST with own reservation", "ROOMLIST 1", "Occupied,Self reserved"},
 
-		{"FREEROOM on full booked day", "FREEROOM 1 1", "No free room"},
+		{"FREEROOM on full booked day", "FREEROOM 1 1", "RESULT_FREEROOM 0"},
 	}
 
 	for _, tc := range table {
