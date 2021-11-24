@@ -1,11 +1,11 @@
 // Package hostel implements the hostel management. It provides a Manager function that can be executed as
 // a goroutine. It is possible to submit Request using the SubmitRequest function that returns
-// a HostelResponse.
+// a Response.
 package hostel
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 )
 
 // hostel is the base struct that defines a hostel.
@@ -96,11 +96,7 @@ func (h *hostel) book(username string, noRoom, nightStart, duration uint) string
 		h.rooms[noRoom-1][night-1] = clientId
 	}
 
-	strRoom     := strconv.FormatUint(uint64(noRoom), 10)
-	strNight    := strconv.FormatUint(uint64(nightStart), 10)
-	strDuration := strconv.FormatUint(uint64(duration ), 10)
-
-	return "RESULT_BOOK " + strRoom + " " + strNight + " " + strDuration
+	return fmt.Sprintf("RESULT_BOOK %d %d %d", noRoom, nightStart, duration)
 }
 
 // getRoomsState returns state for each room: "free", "self reserved" or "occupied". Client must be registered.
@@ -162,14 +158,11 @@ func (h *hostel) searchDisponibility(username string, nightStart, duration uint)
 		}
 
 		if free == true {
-			strRoom     := strconv.FormatUint(uint64(room + 1), 10)
-			strNight    := strconv.FormatUint(uint64(nightStart), 10)
-			strDuration := strconv.FormatUint(uint64(duration ), 10)
-			return "RESULT_FREEROOM " + strRoom + " " + strNight + " " + strDuration
+			return fmt.Sprintf("RESULT_FREEROOM %d %d %d", room + 1, nightStart, duration)
 		}
 	}
 
-	return "No free room found for this period"
+	return "RESULT_FREEROOM 0"
 }
 
 // logout logs a client out.

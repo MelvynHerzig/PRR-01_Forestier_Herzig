@@ -8,31 +8,42 @@ import (
 
 // MakeRequest analyzes incoming message to create a hostelRequestable.
 // Returns false, nil, if req was not sufficient to form a hostelRequestable.
-func MakeRequest(req string) (bool, Request) {
+func MakeRequest(str string, mayContainUsername bool) (bool, Request) {
 
-	trimReq := strings.TrimSpace(req)
+	trimReq := strings.TrimSpace(str)
 	splits := strings.Split(trimReq, " ")
+
+	// Checking if there is good amount of arguments
+	minArgs, maxArgs := 0, 0
+	switch splits[0] {
+	case "LOGIN": 	 minArgs, maxArgs = 2, 2
+	case "LOGOUT": 	 minArgs, maxArgs = 1, 1
+	case "BOOK":     minArgs, maxArgs = 4, 4
+	case "ROOMLIST": minArgs, maxArgs = 2, 2
+	case "FREEROOM": minArgs, maxArgs = 3, 3
+	}
+
+	if mayContainUsername { maxArgs++ }
+	if len(splits) < minArgs || len(splits) > maxArgs {
+		return false, nil
+	}
+
+
+	// Forming request
+	var responseReq Request
 
 	switch splits[0] {
 	case "LOGIN":
-		if len(splits) < 2 {
-			break
-		}
 		var req loginRequest
 		req.clientName = splits[1]
-		if len(splits) > 2 { req.SetUsername(splits[2]) }
-
-		return true, &req
+		responseReq = &req
 
 	case "LOGOUT":
 		var req logoutRequest
 		if len(splits) > 1 { req.SetUsername(splits[1]) }
-		return true, &req
+		responseReq = &req
 
 	case "BOOK":
-		if len(splits) < 4 {
-			break
-		}
 		var req bookRequest
 
 		roomNumber,   err1 := strconv.ParseUint(splits[1], 10, 0)
@@ -45,14 +56,9 @@ func MakeRequest(req string) (bool, Request) {
 		req.roomNumber = uint(roomNumber)
 		req.nightStart = uint(arrivalNight)
 		req.duration   = uint(nbNights)
-		if len(splits) > 4 { req.SetUsername(splits[4]) }
-
-		return true, &req
+		responseReq = &req
 
 	case "ROOMLIST":
-		if len(splits) < 2 {
-			break
-		}
 		var req roomStateRequest
 
 		night, err := strconv.ParseUint(splits[1], 10, 0)
@@ -61,13 +67,9 @@ func MakeRequest(req string) (bool, Request) {
 		}
 
 		req.nightNumber = uint(night)
-		if len(splits) > 2 { req.SetUsername(splits[2]) }
-		return true, &req
+		responseReq = &req
 
 	case "FREEROOM":
-		if len(splits) < 3 {
-			break
-		}
 		var req disponibilityRequest
 
 		arrivalNight, err1 := strconv.ParseUint(splits[1], 10, 0)
@@ -79,12 +81,12 @@ func MakeRequest(req string) (bool, Request) {
 		req.nightStart = uint(arrivalNight)
 		req.duration   = uint(nbNights)
 
-		if len(splits) > 3 { req.SetUsername(splits[3]) }
-
-		return true, &req
+		responseReq = &req
 	}
 
-	return false, nil
+	if mayContainUsername && len(splits) == maxArgs { responseReq.SetUsername(splits[maxArgs - 1]) }
+
+	return true, responseReq
 }
 
 // Serialize transform a loginRequest into a string for communication protocol.

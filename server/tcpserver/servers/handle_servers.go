@@ -97,16 +97,16 @@ func serverHandler(conn net.Conn) {
 	for input.Scan() {
 		text := input.Text()
 
-		if text == confirmReplication { 									// If replication confirmation
+		if text == confirmReplication { // If replication confirmation
 
 			replicationDone <- struct{}{}
 
-		} else if good, request := hostel.MakeRequest(text); good {        	// If replication requested
+		} else if good, request := hostel.MakeRequest(text, true); good {  // If replication requested
 
 			hostel.SubmitRequest(request)
 			fmt.Fprintln(conn, confirmReplication)
 
-		} else { 														   	// or mutex access management
+		} else { // or mutex access management
 
 			handleMessage(deserialize(input.Text()))
 		}

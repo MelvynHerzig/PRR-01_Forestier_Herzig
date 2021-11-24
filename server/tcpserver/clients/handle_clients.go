@@ -117,12 +117,12 @@ func clientHandler(conn net.Conn) {
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
 
-		goodRequest, req := hostel.MakeRequest(input.Text())
+		goodRequest, req := hostel.MakeRequest(input.Text(), false)
 
 		if goodRequest {
 			clientDemands <- clientRequest{ch, req}
 		} else {
-			sendError(ch, "Unknown communication")
+			sendError(ch, "bad request (unknown or too many/less arguments).")
 		}
 	}
 
