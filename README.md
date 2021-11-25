@@ -458,7 +458,7 @@ __Server 0__\
 
 >__Lignes 24)__ La requête BOOK du client A est traitée et demande l'accès au mutex.
 
->__Lignes 29-30)__ Le traitement de la requête BOOK du client est terminé, et une erreur est survenu car la chambre a déjà été réservée sur un autre serveur
+>__Lignes 29-30)__ Le traitement de la requête BOOK du client est terminé, et une erreur est survenue car la chambre a déjà été réservée sur un autre serveur
  
 __Server 1__\
 `1 DEBUG >> Nov 25 15:55:30 SAFE) To 127.0.0.1:27360: WELCOME { … }`\
