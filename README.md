@@ -310,9 +310,17 @@ Server0 : <br>
 Un program de tests a été mis en place. Le programme de tests se comporte comme un seul client. Toutes les requêtes, qu'un client peut émettre, sont testées avec leurs retours
 positifs (pas d’erreurs) et négatifs (paramètres incorrects, indisponibilités, …). 
 
-Pour que le programme de tests fonctionne, il faut lancer trois serveurs conformément à la section **Installation** tout en utilisant le fichier de configuration _config.json_ qui y est présenté.
+Pour que le programme de tests fonctionne, il faut lancer trois serveurs conformément à la section **Installation** tout en utilisant le fichier de configuration _config.json_ qui y est présenté. 
 
 Pour lancer les tests, depuis le dossier <i>server</i>, exécuter la commande: `$go test -v`
+
+_Attention_, certains critères sont nécessaires pour le bon fonctionnement des tests :
+- Les serveurs doivent être fraichement lancé, avec un hotel propre.
+- Le nombre de chambres doit être d'exactement 2
+- Le nombre de nuits ne doit pas exécdé 10
+- Il faut avoir un minimum de 2 serveurs
+
+Le lancement des tests vérifie ces critères et indique les problèmes potentiels.
 
 # Debug de la concurrence
 Comme présenté dans la rubrique "Installation", le serveur peut être lancé en mode debug grâce au paramètre "-debug". Ce mode de fonctionnement affiche les événements dans la console. De plus, à chaque fois que deux utilisateurs sont connectés (login) avec succès, la goroutine qui gère les ressources partagées se met en pause pendant 20 secondes dans le but de laisser suffisament de temps pour créer une situation de concurrence. 
