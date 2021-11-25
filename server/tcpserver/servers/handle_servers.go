@@ -8,6 +8,7 @@ import (
 	"net"
 	"prr.configuration/config"
 	"server/hostel"
+	"server/tcpserver"
 	"strconv"
 	"strings"
 )
@@ -104,6 +105,7 @@ func serverHandler(conn net.Conn) {
 		} else if good, request := hostel.MakeRequest(text, true); good {  // If replication requested
 
 			hostel.SubmitRequest(request)
+			tcpserver.LogRequestReplicating(request)
 			fmt.Fprintln(conn, confirmReplication)
 
 		} else { // or mutex access management

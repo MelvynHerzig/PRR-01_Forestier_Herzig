@@ -41,6 +41,11 @@ func LogRequestHandling(communication hostel.Request) {
 	LogRisk(communication.ToString() + " HANDLING ")
 }
 
+// LogRequestReplicating  logs that a request is being replicated.
+func LogRequestReplicating(communication hostel.Request) {
+	LogRisk(communication.ToString() + " REPLICATING ")
+}
+
 // debugLog logs the message with DEBUG >> prefix.
 func debugLog(message string) {
 	if config.IsDebug() {
