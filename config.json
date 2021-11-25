@@ -1,6 +1,6 @@
 {
-  "debug": false,
-  "nbRooms": 2,
+  "debug": true,
+  "nbRooms": 10,
   "nbNights": 10,
   "servers": [
     {

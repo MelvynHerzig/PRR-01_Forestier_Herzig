@@ -64,14 +64,12 @@ func clientsManager() {
 		case clientDemand := <-clientDemands:
 			tcpserver.LogRisk("--------- Enter shared zone ---------")
 
+			tcpserver.LogRequestHandling(clientDemand.request)
+
 			servers.AccessMutex() // May block
 
 			if config.IsDebug() {
-				for i := 0; i < 10; i++ {
-					fmt.Print("-")
-					time.Sleep(time.Second)
-				}
-				fmt.Println()
+				time.Sleep(time.Second * 15)
 			}
 
 			// Getting session client name and assigning it to request. If client is not logged, will be "".
@@ -83,6 +81,9 @@ func clientsManager() {
 
 			// If request succeed, we replicate the state in other servers, and we set the name used in the request
 			// and in the session.
+
+			tcpserver.LogRequestResult(response)
+
 			if response.Success {
 
 				if clientDemand.request.ShouldReplicate() {
@@ -115,6 +116,7 @@ func clientHandler(conn net.Conn) {
 	// Starting client writer
 	go func() {
 		for msg := range ch { // client writer <- clientsManager / clientHandler
+			tcpserver.LogSafe(fmt.Sprintf("To %s: %s", conn.RemoteAddr().String(), msg))
 			_, _ = fmt.Fprintln(conn, msg) // TCP Client <- client writer
 		}
 	}()
@@ -131,6 +133,8 @@ func clientHandler(conn net.Conn) {
 	for input.Scan() {
 
 		goodRequest, req := hostel.MakeRequest(input.Text(), false)
+
+		tcpserver.LogSafe(fmt.Sprintf("From %s: %s", conn.RemoteAddr().String(), input.Text()))
 
 		if goodRequest {
 			clientDemands <- clientRequest{ch, req}

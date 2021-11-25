@@ -28,11 +28,11 @@ func LogMutex(message string){
 }
 
 // LogRequestResult logs if communication is a success or failed depending on success argument.
-func LogRequestResult(communication hostel.Request, success bool) {
-	if success {
-		LogRisk(communication.ToString() + " SUCCESS ")
+func LogRequestResult(response hostel.Response) {
+	if response.Success {
+		LogRisk(response.Message + " SUCCESS ")
 	} else {
-		LogRisk(communication.ToString() + " ERROR ")
+		LogRisk(response.Message + " ERROR ")
 	}
 }
 
