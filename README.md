@@ -367,6 +367,7 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 (au minimum 2 serveurs)\
 `$go run . 0`\
 `$go run . 1`\
+`$go run . 2`\
  ...
 
 * Démarrer trois clients (A, B et C) \
@@ -398,48 +399,51 @@ pour laisser le temps aux 2 autres requêtes d'arriver.
 ### Analyse d'une sortie des logs.
 
 __Server 0__\
-`1 DEBUG >> Nov 25 15:55:26 SAFE) To 127.0.0.1:27358: WELCOME { … }`\
-`2 DEBUG >> Nov 25 15:55:28 SAFE) To 127.0.0.1:27359: WELCOME { … }`\
-`3 DEBUG >> Nov 25 15:55:41 SAFE) From 127.0.0.1:27358: LOGIN A`\
-`4 DEBUG >> Nov 25 15:55:41 RISK) --------- Enter shared zone ---------`\
-`5 DEBUG >> Nov 25 15:55:41 RISK) LOGIN with username: A HANDLING`\
-`6 DEBUG >> Nov 25 15:55:41 MUTEX) --------- Asking ---------`\
-`7 DEBUG >> Nov 25 15:55:41 MUTEX) --------- Waiting ---------`\
-`8 DEBUG >> Nov 25 15:55:41 MUTEX) --------- Entering ---------`\
-`9 DEBUG >> Nov 25 15:55:43 SAFE) From 127.0.0.1:27359: LOGIN B`\
-`10 DEBUG >> Nov 25 15:55:56 RISK) RESULT_LOGIN SUCCESS`\
-`11 DEBUG >> Nov 25 15:55:56 MUTEX) --------- Leaving ---------`\
-`12 DEBUG >> Nov 25 15:55:56 RISK) --------- Leave shared zone ---------`\
-`13 DEBUG >> Nov 25 15:55:56 RISK) --------- Enter shared zone ---------`\
-`14 DEBUG >> Nov 25 15:55:56 RISK) LOGIN with username: B HANDLING`\
-`15 DEBUG >> Nov 25 15:55:56 MUTEX) --------- Asking ---------`\
-`16 DEBUG >> Nov 25 15:55:56 MUTEX) --------- Waiting ---------`\
-`17 DEBUG >> Nov 25 15:55:56 SAFE) To 127.0.0.1:27358: RESULT_LOGIN`\
-`18 DEBUG >> Nov 25 15:55:58 SAFE) From 127.0.0.1:27358: BOOK 1 1 1`\
-`19 DEBUG >> Nov 25 15:56:11 MUTEX) --------- Entering ---------`\
-`20 DEBUG >> Nov 25 15:56:26 RISK) RESULT_LOGIN SUCCESS`\
-`21 DEBUG >> Nov 25 15:56:26 MUTEX) --------- Leaving ---------`\
-`22 DEBUG >> Nov 25 15:56:26 RISK) --------- Leave shared zone ---------`\
-`23 DEBUG >> Nov 25 15:56:26 RISK) --------- Enter shared zone ---------`\
-`24 DEBUG >> Nov 25 15:56:26 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`25 DEBUG >> Nov 25 15:56:26 MUTEX) --------- Asking ---------`\
-`26 DEBUG >> Nov 25 15:56:26 MUTEX) --------- Waiting ---------`\
-`27 DEBUG >> Nov 25 15:56:26 SAFE) To 127.0.0.1:27359: RESULT_LOGIN`\
-`28 DEBUG >> Nov 25 15:56:30 SAFE) From 127.0.0.1:27359: BOOK 1 1 1`\
-`29 DEBUG >> Nov 25 15:56:41 MUTEX) --------- Entering ---------`\
-`30 DEBUG >> Nov 25 15:56:56 RISK) Room already booked ERROR`\
-`31 DEBUG >> Nov 25 15:56:56 MUTEX) --------- Leaving ---------`\
-`32 DEBUG >> Nov 25 15:56:56 SAFE) To 127.0.0.1:27358: ERROR Room already booked`\
-`33 DEBUG >> Nov 25 15:56:56 RISK) --------- Leave shared zone ---------`\
-`34 DEBUG >> Nov 25 15:56:56 RISK) --------- Enter shared zone ---------`\
-`35 DEBUG >> Nov 25 15:56:56 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`36 DEBUG >> Nov 25 15:56:56 MUTEX) --------- Asking ---------`\
-`37 DEBUG >> Nov 25 15:56:56 MUTEX) --------- Waiting ---------`\
-`38 DEBUG >> Nov 25 15:56:56 MUTEX) --------- Entering ---------`\
-`39 DEBUG >> Nov 25 15:57:11 RISK) Room already booked ERROR`\
-`40 DEBUG >> Nov 25 15:57:11 MUTEX) --------- Leaving ---------`\
-`41 DEBUG >> Nov 25 15:57:11 RISK) --------- Leave shared zone ---------`\
-`42 DEBUG >> Nov 25 15:57:11 SAFE) To 127.0.0.1:27359: ERROR Room already booked`
+`1 DEBUG >> Nov 25 18:54:07 SAFE) To 127.0.0.1:2109: WELCOME { … }`\
+`2 DEBUG >> Nov 25 18:54:09 SAFE) To 127.0.0.1:2116: WELCOME { … }`\
+`3 DEBUG >> Nov 25 18:54:14 SAFE) From 127.0.0.1:2109: LOGIN A`\
+`4 DEBUG >> Nov 25 18:54:14 RISK) --------- Enter shared zone ---------`\
+`5 DEBUG >> Nov 25 18:54:14 RISK) LOGIN with username: A HANDLING`\
+`6 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Asking ---------`\
+`7 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Waiting ---------`\
+`8 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Entering ---------`\
+`9 DEBUG >> Nov 25 18:54:17 SAFE) From 127.0.0.1:2116: LOGIN B`\
+`10 DEBUG >> Nov 25 18:54:29 RISK) RESULT_LOGIN SUCCESS`\
+`11 DEBUG >> Nov 25 18:54:29 SAFE) To 127.0.0.1:2109: RESULT_LOGIN`\
+`12 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Leaving ---------`\
+`13 DEBUG >> Nov 25 18:54:29 RISK) --------- Leave shared zone ---------`\
+`14 DEBUG >> Nov 25 18:54:29 RISK) --------- Enter shared zone ---------`\
+`15 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: B HANDLING`\
+`16 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Asking ---------`\
+`17 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Waiting ---------`\
+`18 DEBUG >> Nov 25 18:54:33 SAFE) From 127.0.0.1:2109: BOOK 1 1 1`\
+`19 DEBUG >> Nov 25 18:54:44 RISK) LOGIN with username: C REPLICATING`\
+`20 DEBUG >> Nov 25 18:54:44 MUTEX) --------- Entering ---------`\
+`21 DEBUG >> Nov 25 18:54:59 RISK) RESULT_LOGIN SUCCESS`\
+`22 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Leaving ---------`\
+`23 DEBUG >> Nov 25 18:54:59 RISK) --------- Leave shared zone ---------`\
+`24 DEBUG >> Nov 25 18:54:59 RISK) --------- Enter shared zone ---------`\
+`25 DEBUG >> Nov 25 18:54:59 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`26 DEBUG >> Nov 25 18:54:59 SAFE) To 127.0.0.1:2116: RESULT_LOGIN`\
+`27 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Asking ---------`\
+`28 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Waiting ---------`\
+`29 DEBUG >> Nov 25 18:55:02 SAFE) From 127.0.0.1:2116: BOOK 1 1 1`\
+`30 DEBUG >> Nov 25 18:55:14 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING`\
+`31 DEBUG >> Nov 25 18:55:14 MUTEX) --------- Entering ---------`\
+`32 DEBUG >> Nov 25 18:55:29 RISK) Room already booked ERROR`\
+`33 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Leaving ---------`\
+`34 DEBUG >> Nov 25 18:55:29 SAFE) To 127.0.0.1:2109: ERROR Room already booked`\
+`35 DEBUG >> Nov 25 18:55:29 RISK) --------- Leave shared zone ---------`\
+`36 DEBUG >> Nov 25 18:55:29 RISK) --------- Enter shared zone ---------`\
+`37 DEBUG >> Nov 25 18:55:29 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`38 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Asking ---------`\
+`39 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Waiting ---------`\
+`40 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Entering ---------`\
+`41 DEBUG >> Nov 25 18:55:44 RISK) Room already booked ERROR`\
+`42 DEBUG >> Nov 25 18:55:44 MUTEX) --------- Leaving ---------`\
+`43 DEBUG >> Nov 25 18:55:44 SAFE) To 127.0.0.1:2116: ERROR Room already booked`\
+`44 DEBUG >> Nov 25 18:55:44 RISK) --------- Leave shared zone ---------`\
+
 
 
 > __Ligne 3)__ Le serveur une requête de login du client ayant l'adresse 127.0.0.1:27358
@@ -454,37 +458,49 @@ __Server 0__\
 
 > __Lignes 13-14)__ La 2ème requête reçue passe en section critique
 
-> __Lignes 15-19)__ Le serveur demande l'accès au mutex, et attend la réponse. Pendant cette attente, il renvoie le résultat au client A et reçoit une nouvelle requête. On voit que le serveur a dû attendre 15 secondes sur le mutex. 
+> __Lignes 15-20)__ Le serveur demande l'accès au mutex, et attend la réponse. Pendant cette attente, il renvoie le résultat au client A et reçoit une nouvelle requête. On voit que le serveur a dû attendre 15 secondes sur le mutex. Entre temps, le serveur a répliqué une requête fait à un autre serveur (Ligne 19)
 
->__Lignes 24)__ La requête BOOK du client A est traitée et demande l'accès au mutex.
+> __Ligne 25)__ La requête BOOK du client A est traitée et demande l'accès au mutex.
 
->__Lignes 29-30)__ Le traitement de la requête BOOK du client est terminé, et une erreur est survenue car la chambre a déjà été réservée sur un autre serveur
+> __Ligne 30)__ Le serveur réplique la requête actuellement dans le mutex
+
+> __Lignes 32-33)__ Le traitement de la requête BOOK du client est terminé, et une erreur est survenue car la chambre a déjà été réservée sur un autre serveur
  
 __Server 1__\
-`1 DEBUG >> Nov 25 15:55:30 SAFE) To 127.0.0.1:27360: WELCOME { … }`\
-`2 DEBUG >> Nov 25 15:55:44 SAFE) From 127.0.0.1:27360: LOGIN C`\
-`3 DEBUG >> Nov 25 15:55:44 RISK) --------- Enter shared zone ---------`\
-`4 DEBUG >> Nov 25 15:55:44 RISK) LOGIN with username: C HANDLING`\
-`5 DEBUG >> Nov 25 15:55:44 MUTEX) --------- Asking ---------`\
-`6 DEBUG >> Nov 25 15:55:44 MUTEX) --------- Waiting ---------`\
-`7 DEBUG >> Nov 25 15:55:56 MUTEX) --------- Entering ---------`\
-`8 DEBUG >> Nov 25 15:56:11 RISK) RESULT_LOGIN SUCCESS`\
-`9 DEBUG >> Nov 25 15:56:11 MUTEX) --------- Leaving ---------`\
-`10 DEBUG >> Nov 25 15:56:11 RISK) --------- Leave shared zone ---------`\
-`11 DEBUG >> Nov 25 15:56:11 SAFE) To 127.0.0.1:27360: RESULT_LOGIN`\
-`12 DEBUG >> Nov 25 15:56:15 SAFE) From 127.0.0.1:27360: BOOK 1 1 1`\
-`13 DEBUG >> Nov 25 15:56:15 RISK) --------- Enter shared zone ---------`\
-`14 DEBUG >> Nov 25 15:56:15 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`15 DEBUG >> Nov 25 15:56:15 MUTEX) --------- Asking ---------`\
-`16 DEBUG >> Nov 25 15:56:15 MUTEX) --------- Waiting ---------`\
-`17 DEBUG >> Nov 25 15:56:26 MUTEX) --------- Entering ---------`\
-`18 DEBUG >> Nov 25 15:56:41 RISK) RESULT_BOOK 1 1 1 SUCCESS`\
-`19 DEBUG >> Nov 25 15:56:41 MUTEX) --------- Leaving ---------`\
-`20 DEBUG >> Nov 25 15:56:41 RISK) --------- Leave shared zone ---------`\
-`21 DEBUG >> Nov 25 15:56:41 SAFE) To 127.0.0.1:27360: RESULT_BOOK 1 1 1`\
+`1 DEBUG >> Nov 25 18:54:11 SAFE) To 127.0.0.1:2117: WELCOME { … }`\
+`2 DEBUG >> Nov 25 18:54:21 SAFE) From 127.0.0.1:2117: LOGIN C`\
+`3 DEBUG >> Nov 25 18:54:21 RISK) --------- Enter shared zone ---------`\
+`4 DEBUG >> Nov 25 18:54:21 RISK) LOGIN with username: C HANDLING`\
+`5 DEBUG >> Nov 25 18:54:21 MUTEX) --------- Asking ---------`\
+`6 DEBUG >> Nov 25 18:54:21 MUTEX) --------- Waiting ---------`\
+`7 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: A REPLICATING`\
+`8 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Entering ---------`\
+`9 DEBUG >> Nov 25 18:54:44 RISK) RESULT_LOGIN SUCCESS`\
+`10 DEBUG >> Nov 25 18:54:44 MUTEX) --------- Leaving ---------`\
+`11 DEBUG >> Nov 25 18:54:44 RISK) --------- Leave shared zone ---------`\
+`12 DEBUG >> Nov 25 18:54:44 SAFE) To 127.0.0.1:2117: RESULT_LOGIN`\
+`13 DEBUG >> Nov 25 18:54:47 SAFE) From 127.0.0.1:2117: BOOK 1 1 1`\
+`14 DEBUG >> Nov 25 18:54:47 RISK) --------- Enter shared zone ---------`\
+`15 DEBUG >> Nov 25 18:54:47 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`16 DEBUG >> Nov 25 18:54:47 MUTEX) --------- Asking ---------`\
+`17 DEBUG >> Nov 25 18:54:47 MUTEX) --------- Waiting ---------`\
+`18 DEBUG >> Nov 25 18:54:59 RISK) LOGIN with username: B REPLICATING`\
+`19 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Entering ---------`\
+`20 DEBUG >> Nov 25 18:55:14 RISK) RESULT_BOOK 1 1 1 SUCCESS`\
+`21 DEBUG >> Nov 25 18:55:14 MUTEX) --------- Leaving ---------`\
+`22 DEBUG >> Nov 25 18:55:14 RISK) --------- Leave shared zone ---------`\
+`23 DEBUG >> Nov 25 18:55:14 SAFE) To 127.0.0.1:2117: RESULT_BOOK 1 1 1`\
 
-> __Lignes 12-21)__ Le serveur reçoit une requête BOOK du client C. Il entre en section critique et attend sur le mutex. 
+> __Lignes 13-23)__ Le serveur reçoit une requête BOOK du client C. Il entre en section critique et attend sur le mutex. 
 Après avoir obtenu l'accès au mutex, une réponse positive est renvoyé au client. La chambre est réservée. 
+
+__Server 2__\
+`1 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: A REPLICATING`\
+`2 DEBUG >> Nov 25 18:54:44 RISK) LOGIN with username: C REPLICATING`\
+`3 DEBUG >> Nov 25 18:54:59 RISK) LOGIN with username: B REPLICATING`\
+`4 DEBUG >> Nov 25 18:55:14 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING`\
+
+> __Lignes 1-4)__ Le serveur n'a reçu de requête d'aucun client. Cependant, il a répliqué toutes les requêtes des autres serveurs ayant obtenu une réponse positive.
 
 Comme nous pouvons le voir, aucune entrée en zone partagée n'est effectuée tant que l'entrée précédente n'est pas terminée. Chaque entrée partagée contient le traitement d'une seule requête. En conclusion, la gestion des accès concurrents est correcte.
 
