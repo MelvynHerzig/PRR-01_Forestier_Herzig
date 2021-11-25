@@ -384,7 +384,7 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 > Lors du traitement de la première requête, celle-ci va s'arrêter pendant 15 secondes 
 pour laisser le temps aux 2 autres requêtes d'arriver.
 
-* Envoyer la même requête depuis les trois clients\
+* Envoyer la même requête depuis les trois clients
   * A \
   `BOOK 1 1 1`
   * B \
