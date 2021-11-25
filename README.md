@@ -329,7 +329,7 @@ De ce fait, il est possible de vérifier que la gestion du mutex est conforme.
 
 ## Distinctions
 Il existe deux types de log:
-* RISK: log une requête effectuée dans la zone partagée (goroutine gérant l'hôtel, hostelManager).
+* RISK: log une requête effectuée dans la zone partagée localement entre les clients. (goroutine gérant l'hôtel, hostelManager).
 * SAFE: log une réception ou un envoi depuis/vers le client (goroutine gérant la communication spécifique à chaque client, clientHandler). Ce type de log peut apparaître au milieu d'un passage en zone concurrente sans problème.
 * MUTEX: log les interactions avec le mutex. Le log affiche la demande, l'attente, l'entrée et la sortie du mutex. 
 
