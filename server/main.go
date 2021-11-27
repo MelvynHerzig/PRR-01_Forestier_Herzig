@@ -1,43 +1,56 @@
-// Package main starts the hostel server manager
+// Package main gets program arguments, starts the client handler, starts the mutex core, sync the servers and
+// finally starts listener for client connexions.
 package main
 
 import (
-	"fmt"
 	"log"
+	"net"
 	"os"
-	"server/tcpserver"
+	"prr.configuration/config"
+	"server/hostel"
+	"server/tcpserver/clients"
+	"server/tcpserver/servers"
 	"strconv"
 )
 
-// main Starts hostel tcp server.
+// main Gets programs arguments, configuration file and start server.
 func main() {
-	// Getting program args (#rooms and #day of hostel).
+
+	// Getting program args (server number).
 	argsLen := len(os.Args)
-	if argsLen < 3 {
-		log.Fatal("Paramètres manquants")
+	if argsLen < 2 {
+		log.Fatal("Usage: <server number>")
 	}
 
-	nbRooms, errRooms := strconv.ParseUint(os.Args[1], 10, 0)
-	nbDays, errDays   := strconv.ParseUint(os.Args[2], 10, 0)
-
-	if errRooms != nil || errDays != nil {
-		log.Fatal("Paramètres invalides. Devrait être <nb chambres> <nb nuits>")
+	noServ, errNoServ   := strconv.ParseUint(os.Args[1], 10, 0)
+	if  errNoServ != nil {
+		log.Fatal("Invalid parameter. Must be <no serveur>")
 	}
 
-	// Fetching last arguments
-	if argsLen == 4 {
-		for argIndex := 3 ; argIndex < argsLen; argIndex++ {
+	// Init configuration
+	config.Init("../config.json", uint(noServ))
 
-			switch os.Args[argIndex] {
-			case "-debug":
-				tcpserver.DebugMode = true
-				fmt.Println("Starting with debug on")
-
-			default: log.Fatal("Argument inconnu ", os.Args[argIndex])
-			}
-		}
+	if noServ < 0 || noServ >= uint64(len(config.GetServers())) {
+		log.Fatal("Server number is an integer between [0, servers count [")
 	}
 
-	tcpserver.StartServer(uint(nbRooms), uint(nbDays))
+	// Starting TCP Server.
+	localPort := config.GetServerById(config.GetLocalServerNumber()).Port
+	listener, err := net.Listen("tcp", "localhost:" + strconv.FormatUint(uint64(localPort), 10))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Hostel manager to handle sequentially incoming request.
+	go hostel.Manager(config.GetRoomsCount(), config.GetNightsCount())
+
+	// Starting mutex core that client processes used to access hostel
+	go servers.MutexCore()
+
+	// Waiting for servers to come online and opening connexions.
+	servers.Sync(listener)
+
+	// Waiting for client.
+	clients.HandleClients(listener)
 }
 
