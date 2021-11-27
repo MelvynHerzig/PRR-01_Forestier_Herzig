@@ -1,6 +1,4 @@
-// Package hostel implements the hostel management. It provides a Manager function that can be executed as
-// a goroutine. It is possible to submit Request using the SubmitRequest function that returns
-// a Response.
+// Package hostel a hostel with custom function to manipulate the hostel.
 package hostel
 
 import (

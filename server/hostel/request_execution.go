@@ -1,3 +1,4 @@
+// Package hostel implements Request execution function.
 package hostel
 
 import "strings"

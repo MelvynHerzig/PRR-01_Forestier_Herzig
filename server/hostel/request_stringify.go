@@ -1,3 +1,4 @@
+// Package hostel implements Request function to stringify Request (human-readable)
 package hostel
 
 import "fmt"

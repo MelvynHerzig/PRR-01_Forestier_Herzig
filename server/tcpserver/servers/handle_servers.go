@@ -1,4 +1,4 @@
-// Package servers handles servers to servers connexions, servers synchronization and servers to servers communication.
+// Package servers handles servers to servers connexions: broadcast, replication, mutex negotiation.
 package servers
 
 import (

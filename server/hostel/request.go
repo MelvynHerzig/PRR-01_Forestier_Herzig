@@ -1,3 +1,4 @@
+// Package hostel implements some Request objects that can be submitted by SubmitRequest to change the hostel data.
 package hostel
 
 // Request interface of communication that can be submitted to Manager with SubmitRequest.

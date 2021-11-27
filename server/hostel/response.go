@@ -1,3 +1,4 @@
+// Package hostel implements a Response object that are sent when a Request is executed.
 package hostel
 
 // Response is a struct that holds the result from the execution of a Hostelrequestable.

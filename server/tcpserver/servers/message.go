@@ -1,3 +1,4 @@
+// Package servers implements some custom messages in order to do mutex negotiation.
 package servers
 
 import (

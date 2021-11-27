@@ -1,3 +1,4 @@
+// Package hostel implements Request function that return if a request needs to be replicated.
 package hostel
 
 // ShouldReplicate says that by default the request are not replicated.

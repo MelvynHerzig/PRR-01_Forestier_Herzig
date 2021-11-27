@@ -1,3 +1,5 @@
+// Package hostel implements  a hostel manager which is a function to be run in a goroutine in order to handle
+// "communicating sequential processes". The Request can are submitted by SubmitRequest and returns a Response.
 package hostel
 
 import "log"

@@ -1,3 +1,4 @@
+// Package hostel implements Request function to serialize/deserialize .
 package hostel
 
 import (
