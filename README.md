@@ -17,7 +17,7 @@ Respository du laboratoire 02 pour le cours PRR
   * servers ( ip et port, minimum 1 serveur): Pour définir les adresses et ports du cluster de serveurs de gestion de l'hôtel
 ```
 {
-  "debug": true,
+  "debug": false,
   "nbRooms":10,
   "nbNights":10,
   "servers": [
@@ -317,8 +317,9 @@ Pour lancer les tests, depuis le dossier <i>server</i>, exécuter la commande: `
 _Attention_, certains critères sont nécessaires pour le bon fonctionnement des tests :
 - Les serveurs doivent être fraichement lancé, avec un hotel propre.
 - Le nombre de chambres doit être d'exactement 2
-- Le nombre de nuits ne doit pas exécdé 10
+- Le nombre de nuits ne doit pas excéder 10
 - Il faut avoir un minimum de 2 serveurs
+- Ne pas activer le mode débug
 
 Le lancement des tests vérifie ces critères et indique les problèmes potentiels.
 
