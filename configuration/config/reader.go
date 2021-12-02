@@ -127,6 +127,9 @@ func IsServerIP(address string) bool {
 }
 
 func GetInitialChildren(id uint) []Server {
+	if reader == nil {
+		log.Fatal("config not initialized")
+	}
 	var children []Server
 	for _, child := range reader.Servers {
 		if child.Parent == id {
