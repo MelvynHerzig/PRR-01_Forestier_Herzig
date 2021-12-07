@@ -5,24 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6ae6040d-3dba-43b7-b335-6416830d78dc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../server/hostel/hostel_manager.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../server/hostel/request_execution.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../server/hostel/response.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Client/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../Client/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Client/tcpclient/tcp_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/../Client/tcpclient/tcp_client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../client/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../config 3 servers save.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../config.json" beforeDir="false" afterPath="$PROJECT_DIR$/../config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reader/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/reader.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/hostel.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/hostel.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_execution.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_prototypes.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_serialization.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request_serialization.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/hostel/request/request_stringify.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/hostel/request_stringify.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/reader.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/clients/handle_clients.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../server/tcpserver/debugger.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/debugger.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/servers/handle_servers.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/servers/handle_servers.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../server/tcpserver/servers/mutex_process.go" beforeDir="false" afterPath="$PROJECT_DIR$/../server/tcpserver/servers/mutex_process.go" afterDir="false" />
     </list>
@@ -72,6 +56,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

@@ -2,9 +2,9 @@
 package servers
 
 import (
+	"container/list"
 	"prr.configuration/config"
 	"server/tcpserver"
-	"server/tcpserver/servers/clock"
 )
 
 // Channels used for communication between client process and mutex process to manage critical section access
@@ -17,26 +17,17 @@ var (
 // Channel used to get received message from network process.
 var onMessage = make(chan message)
 
-// Stores the messages of all servers
-var messages []message
+// Stores the processes' id that have transmitted a message
+var queue = list.New()
 
-// The server isInSC
-var isInSC bool
+// Defines the state of the mutex noDemand (= 0), demanding (= 1), inSection (= 2)
+var state int
+const noDemand  = 0
+const demanding = 1
+const inSection = 2
 
 // MutexCore method executed in a goroutine. It is responsible to be the mutex "engine".
 func MutexCore() {
-
-	// Stores the messages of all servers
-	messages = make([]message, len(config.GetServers()))
-
-	// Init the messages
-	for i := 0; i < len(messages); i++ {
-		messages[i] = message{
-			MessageType: REL,
-			Timestamp:   0,
-			SrcServer:   uint(i),
-		}
-	}
 
 	for {
 		select {
@@ -45,7 +36,10 @@ func MutexCore() {
 		case _ = <-leave:
 			doLeave()
 		case msg := <-onMessage:
-			doHandleMessage(msg)
+			switch msg.MessageType {
+			case token: doHandleToken(msg)
+			case req: doHandleReq(msg)
+			}
 		}
 	}
 }
@@ -73,65 +67,95 @@ func handleMessage(message message) {
 
 // doDemand function called when client process ask for mutex
 func doDemand() {
-	clock.IncTimestamp()
-	message := message{MessageType: REQ,
-		Timestamp: clock.GetTimestamp(),
-		SrcServer: config.GetLocalServerNumber()}
-	messages[config.GetLocalServerNumber()] = message
-	sendToAll(serialize(message))
+	// We are a children we ask for token.
+	if parent.id != config.GetLocalServerNumber() {
+		queue.PushBack(config.GetLocalServerNumber())
+
+		if state == noDemand {
+			state = demanding
+			sendToParent(serialize(message{MessageType: req,
+				                           SrcServer: config.GetLocalServerNumber()}))
+		}
+	} else { // we are root we going in.
+		state = inSection
+		allow<-struct{}{}
+	}
 
 }
 
 // doLeave function called when client process leaves the mutex
 func doLeave() {
-	clock.IncTimestamp()
-	message := message{MessageType: REL,
-		Timestamp: clock.GetTimestamp(),
-		SrcServer: config.GetLocalServerNumber()}
-	messages[config.GetLocalServerNumber()] = message
-	sendToAll(serialize(message))
-	isInSC = false
-}
+	state = noDemand
 
-// doHandleMessage handles a mutex message incoming from distant server
-func doHandleMessage(msg message) {
-	clock.SyncTimestamp(msg.Timestamp)
+	if queue.Len() != 0 {
 
-	// Because we have implemented optimised version.
-	// All incoming message can be stored
-	messages[msg.SrcServer] = msg
+		// Getting next req.
+		front := queue.Front()
+		queue.Remove(front)
 
-	// Optimisation
-	if msg.MessageType == REQ && messages[config.GetLocalServerNumber()].MessageType != REQ {
-		response := message{MessageType: ACK,
-			Timestamp: clock.GetTimestamp(),
-			SrcServer: config.GetLocalServerNumber()}
-		sendToOne(msg.SrcServer, serialize(response))
-	}
+		// Child become parent
+		parent = children[front.Value.(uint)]
+		delete(children, front.Value.(uint))
 
-	checkCriticalSection()
-}
+		sendToParent(serialize(message{MessageType: token,
+									   SrcServer: config.GetLocalServerNumber()}))
 
-// checkCriticalSection checks if server has access to mutex
-func checkCriticalSection() {
-	if messages[config.GetLocalServerNumber()].MessageType != REQ || isInSC {
-		return
-	}
-	myNumber := config.GetLocalServerNumber()
-	for i := 0; i < len(messages); i++ {
-		if uint(i) == myNumber {
-			continue
-		}
-
-		// if our timestamp is not the oldest
-		if messages[myNumber].Timestamp > messages[i].Timestamp {
-			return
-		} else if messages[myNumber].Timestamp == messages[i].Timestamp && myNumber > uint(i) {
-			return
+		if queue.Len() != 0 {
+			state = demanding
+			sendToParent(serialize(message{MessageType: req,
+										   SrcServer: config.GetLocalServerNumber()}))
 		}
 	}
+}
 
-	// Signal client that he can enter
-	allow <- struct{}{}
-	isInSC = true
+// doHandleReq handles an incoming req message
+func doHandleReq (msg message) {
+	if parent.id == config.GetLocalServerNumber() && state == noDemand {
+
+		// Child become parent
+		parent = children[msg.SrcServer]
+		delete(children, msg.SrcServer)
+
+		sendToParent(serialize(message{MessageType: token,
+									   SrcServer: config.GetLocalServerNumber()}))
+	} else {
+		queue.PushBack(msg.SrcServer)
+
+		if parent.id != config.GetLocalServerNumber() && state == noDemand {
+			state = demanding
+			sendToParent(serialize(message{MessageType: req,
+										   SrcServer: config.GetLocalServerNumber()}))
+		}
+	}
+}
+
+// doHandleToken handles an incoming token message
+func doHandleToken(msg message) {
+	// Getting next req.
+	front := queue.Front()
+	queue.Remove(front)
+
+	if front.Value.(uint) == config.GetLocalServerNumber() {
+		children[parent.id] = parent
+		parent = treeNode{id: front.Value.(uint), connection: nil}
+		state = inSection
+		allow<-struct{}{}
+	} else {
+		// Child becomes parent and parent becomes child
+		temp := parent
+		parent = children[front.Value.(uint)]
+		delete(children, front.Value.(uint))
+		children[temp.id] = temp
+
+		sendToParent(serialize(message{MessageType: token,
+									   SrcServer: config.GetLocalServerNumber()}))
+
+		if queue.Len() != 0 {
+			state = demanding
+			sendToParent(serialize(message{MessageType: req,
+										   SrcServer: config.GetLocalServerNumber()}))
+		} else {
+			state = noDemand
+		}
+	}
 }

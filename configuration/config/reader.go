@@ -132,7 +132,7 @@ func GetInitialChildrenIds(id uint) []uint {
 	}
 	var children []uint
 	for index, child := range reader.Servers {
-		if child.Parent == id {
+		if child.Parent == id && uint(index) != id{
 			children = append(children, uint(index))
 		}
 	}
