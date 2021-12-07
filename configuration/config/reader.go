@@ -126,6 +126,7 @@ func IsServerIP(address string) bool {
 	return false
 }
 
+// GetInitialChildrenIds Compute and return the children of specified Server id
 func GetInitialChildrenIds(id uint) []uint {
 	if reader == nil {
 		log.Fatal("config not initialized")
