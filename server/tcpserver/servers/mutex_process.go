@@ -22,9 +22,11 @@ var queue = list.New()
 
 // Defines the state of the mutex noDemand (= 0), demanding (= 1), inSection (= 2)
 var state int
-const noDemand  = 0
-const demanding = 1
-const inSection = 2
+const (
+	noDemand = iota
+	demanding
+	inSection
+)
 
 // MutexCore method executed in a goroutine. It is responsible to be the mutex "engine".
 func MutexCore() {
@@ -70,7 +72,7 @@ func doDemand() {
 	// We are a children we ask for token.
 	if parent.id != config.GetLocalServerNumber() {
 		queue.PushBack(config.GetLocalServerNumber())
-
+		
 		if state == noDemand {
 			state = demanding
 			sendToParent(serialize(message{MessageType: req,
@@ -140,6 +142,7 @@ func doHandleToken(msg message) {
 		parent = treeNode{id: front.Value.(uint), connection: nil}
 		state = inSection
 		allow<-struct{}{}
+
 	} else {
 		// Child becomes parent and parent becomes child
 		temp := parent
