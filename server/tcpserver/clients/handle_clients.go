@@ -100,6 +100,15 @@ func clientsManager() {
 
 		case cli := <-leaving:
 
+			// If client is logged, then log out
+			if name := clients[cli]; name != "" {
+				servers.AccessMutex() // May block
+				_, req := hostel.MakeRequest(fmt.Sprintf("LOGOUT %s", name), true)
+				hostel.SubmitRequest(req)
+				servers.Replicate(req)
+				servers.LeaveMutex()
+			}
+
 			// We remove client session
 			delete(clients, cli)
 			close(cli)

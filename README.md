@@ -1,5 +1,5 @@
-# PRR-02_Forestier_Herzig
-Respository du laboratoire 02 pour le cours PRR
+# PRR-03_Forestier_Herzig
+Respository du laboratoire 03 pour le cours PRR
 
 # Étudiants
 - Forestier Quentin
@@ -13,30 +13,46 @@ Respository du laboratoire 02 pour le cours PRR
 * Remplir le fichier de configuration _config.json_ à la racine du projet.
   * debug ( booléen, true/false ): Pour lancer les serveurs en mod debug
   * nbRooms ( nombre, entre 1 et N ): Pour définir le nombre de chambres supportées par l'hôtel
-  * nbNights ( nombre, entre 1 et N): Pour définir le nombre de nuits supportées par l'hôtel
-  * servers ( ip et port, minimum 1 serveur): Pour définir les adresses et ports du cluster de serveurs de gestion de l'hôtel
+  * nbNights ( nombre, entre 1 et M ): Pour définir le nombre de nuits supportées par l'hôtel
+  * servers ( ip, port et numéro du parent [0, Nb serveurs], minimum 1 serveur): Pour définir les adresses, les ports et l'arborescence du cluster de serveurs de gestion de l'hôtel
 ```
 {
-  "debug": false,
-  "nbRooms":10,
-  "nbNights":10,
+  "debug": true,
+  "nbRooms": 10,
+  "nbNights": 10,
   "servers": [
     {
       "ip": "127.0.0.1",
-      "port": 3000
+      "port": 3000,
+      "parent": 2
     },
     {
       "ip": "127.0.0.1",
-      "port": 3001
+      "port": 3001,
+      "parent": 1
     },
     {
       "ip": "127.0.0.1",
-      "port": 3002
+      "port": 3002,
+      "parent": 1
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3003,
+      "parent": 2
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3004,
+      "parent": 1
     }
   ]
 }
 ```
-> La configuration précédente est un exemple.
+> La configuration précédente est un exemple avec cinq serveurs.\
+> Sachant que le premier serveur dans la liste est le serveur 0 et le dernier, le serveur 4.\
+> L'arborescence serait la suivante:\
+>![Sans titre](https://user-images.githubusercontent.com/34660483/146408671-b4042b0a-5ddf-4226-a552-fef85f3ba00c.png)
 
 * Démarrer le(s) serveur(s). Un argument est nécessaire.
   * Entre 0 et N-1 avec N = nombres de serveurs configurés dans _config.json_
@@ -44,11 +60,13 @@ Respository du laboratoire 02 pour le cours PRR
 > Depuis le dossier <i>server</i>.
 >
 > En admettant le fichier de configuration précédent:\
-> `$ go run . 1`\
+> `$ go run . 0`\
 > `$ go run . 2`\
-> `$ go run . 0`
+> `$ go run . 4`\ 
+> `$ go run . 1`\
+> `$ go run . 3`
 >
-> L'ordre de démarrage importe peu. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration.
+> L'ordre de démarrage 'est pas important. Durant cette étape, les serveurs s'inter-connectent. En conséquence, tant que tous ne sont pas allumés et connectés, ils n'acceptent que des connexions ayant une adresse IP source appartenant au fichier de configuration.
 
 * Démarrer le(s) client(s). Un argument est facultatif.
   * Numéro du serveur distant auquel se connecter.
@@ -176,7 +194,6 @@ Si la requête peut être formée:
 * Execute et retourne le résultat. (context concurrent)
 * Sinon envoie une erreur. (context non concurrent)
 
-
 ### Client
 Le client récupère le premier mot de la réponse. Il détermine si c'est:
 * Un résultat et affiche les détails.
@@ -241,18 +258,20 @@ Au démarrage, les serveurs doivent s'attendre pour ouvrir des connexions avant 
 ## Comment serveur trouve un autre serveur (adresses et ports)?
 Le serveur interroge le fichier _config.json_.
 
-## Qui parle en premier ? 
-Les serveurs de numéros M se connectent aux serveur de numéro 0 - N avec N < M. Les serveurs de numéro M transmettent leur numéro M de serveur.
+## Qui parle en premier (attente de la mise en ligne entre serveurs) ? 
+Au démarrage, un serveur commence par attendre que ses enfants (si il en a) se connectent. Les enfants parlent en premier en envoyant leur numéro de serveur entre 0 et N-1.
+Quand tous les enfants d'un serveur sont connectés et qu'ils ont envoyé leur numéro, le serveur se connectent à son parent.
+Lorsque tous les enfants direct du noeud racine sont connectés et ont envoyés leur numéro, la racine envoie un ordre de démarrage ("GO") à ses enfants qui est propagés aux enfants des enfants et ainsi de suite.
 
 ## Qui ferme la connexion et quand?
-Les serveurs ne ferment la connexion que si tout le cluster doit s'arrêter. Théoriquement, jamais.
+Les serveurs ferment la connexion que si tout le cluster doit s'arrêter. Théoriquement, jamais.
 
-## Qu'est ce qui se passe quand un message est reçu?
+## Qu'est ce qui se passe quand un message est reçu (après mise en ligne de tous les serveur)?
 ### Serveur
 Le serveur récupère le premier mot de la requête et vérifie si il correspond à:
 * Premier mot d'une requête client-serveur: il applique immédiatement la requête sur ses données.
 * Confirmation de réplication: il signal au travers d'un canal spécialisé qu'une confirmation de réplication a été reçue.
-* Premier mot d'un message de l'algorithme de lamport: il forme le message et le transmet au mutex.
+* Premier mot d'un message de l'algorithme de Raymond: il forme le message et le transmet au mutex.
 
 ## Syntaxe des messages de réplication
 ### Requête
@@ -271,46 +290,46 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 |---|----|
 | Réponse positive à une réplication | OK CRLF |
 
-## Syntaxe des messages de Lamport
+## Syntaxe des messages de Raymond
 | Utilité | Syntaxe |
 |---|----|
-| Acknowledgement | ACK {server local timestamp} {server local number} CRLF |
-| Mutex demand | REQ {server local timestamp} {server local number} CRLF |
-| Mutex release | REL {server local timestamp} {server local number} CRLF |
+| Request | req {sender server id} CRLF |
+| Token | token {sender server id} CRLF |
 
 > La version optimisée a été implémentée: un ack est envoyé par un serveur i seulement si son dernier message envoyé n'est pas un req.
 
-## Exemple d'une conversation entre 2 serveurs Server0 et Server1
+## Exemple d'une conversation entre 2 serveurs Server 2 et Server 1 (en fonction de la configuration initiale)
 
 _Synchronisation (une fois au démarrage)_ 
 
-Server1 : <br>
-`1`
+// Server 1 est déjà connecté à serveur 4\
+Server 2 : <br>
+`2`
+Server 1 :\
+`GO`
+
 
 _Demande de mutex_
 
-Server0 : <br>
-`REQ 1 0`\
-Server1 : <br> 
-`ACK 2 1`
+Server 2 : <br>
+`req 2`\
+Server 1 : <br> 
+`token 1`
 
 _Réplication_
 
-Server0 : <br>
+Server 2 : <br>
 `BOOK 1 1 2 Pierre`\
-Server1 : <br> 
+> Serveur 1 à reçu la demande de réplication, l'a effectué, l'a transmise à 4 qui a confirmé la réplication\
+
+Server 1 : <br> 
 `OK`
-
-_Relâchement de mutex_
-
-Server0 : <br>
-`REL 5 0`
 
 # Tests automatique
 Un program de tests a été mis en place. Le programme de tests se comporte comme un seul client. Toutes les requêtes, qu'un client peut émettre, sont testées avec leurs retours
 positifs (pas d’erreurs) et négatifs (paramètres incorrects, indisponibilités, …). 
 
-Pour que le programme de tests fonctionne, il faut lancer trois serveurs conformément à la section **Installation** tout en utilisant le fichier de configuration _config.json_ qui y est présenté. 
+Pour que le programme de tests fonctionne, il faut lancer les 5 serveurs conformément à la section **Installation** tout en utilisant le fichier de configuration _config.json_ qui y est présenté. 
 
 Pour lancer les tests, depuis le dossier <i>server</i>, exécuter la commande: `$go test -v`
 
@@ -319,7 +338,7 @@ _Attention_, certains critères sont nécessaires pour le bon fonctionnement des
 - Le nombre de chambres doit être d'exactement 2
 - Le nombre de nuits ne doit pas excéder 10
 - Il faut avoir un minimum de 2 serveurs
-- Ne pas activer le mode débug
+- Ne pas activer le mode debug
 
 Le lancement des tests vérifie ces critères et indique les problèmes potentiels.
 
