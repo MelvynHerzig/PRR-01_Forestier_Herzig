@@ -21,11 +21,11 @@ var replicationDone = make(chan struct{})
 const confirmReplication = "OK"
 
 type treeNode struct {
-	id uint
+	id         uint
 	connection net.Conn
 }
 
-var children = make(map[uint] treeNode)
+var children = make(map[uint]treeNode)
 
 var parent treeNode
 
@@ -57,9 +57,8 @@ func Sync(listener net.Listener) {
 
 		fmt.Println("server " + strconv.FormatUint(uint64(num), 10) + " connected")
 
-		children[uint(num)] = treeNode{ id : uint(num), connection : conn}
+		children[uint(num)] = treeNode{id: uint(num), connection: conn}
 	}
-
 
 	parentId := config.GetServerById(localServerNumber).Parent
 	// If we have a parent
@@ -79,7 +78,7 @@ func Sync(listener net.Listener) {
 		fmt.Println("Parent " + strconv.FormatUint(uint64(parentId), 10) + " connected ")
 
 		// Sending our local number
-		sendToParent(strconv.FormatUint(uint64(localServerNumber),10))
+		sendToParent(strconv.FormatUint(uint64(localServerNumber), 10))
 
 		// Waiting for ready signal ( it doesn't matter what it is, we just want a message back)
 		bufio.NewReader(conn).ReadString('\n')
@@ -102,12 +101,12 @@ func Sync(listener net.Listener) {
 
 // Replicate sends the given requests to other server and waits that they answer back that they have applied it.
 // Blocks until other all server confirmed.
-func Replicate(req hostel.Request){
+func Replicate(req hostel.Request) {
 
 	sendToChildren(req.Serialize())
 
 	// Waiting for other servers to confirm that the replication has been processed
-	for nbResponseReceived := 0; nbResponseReceived < len(children) ; nbResponseReceived++ {
+	for nbResponseReceived := 0; nbResponseReceived < len(children); nbResponseReceived++ {
 		<-replicationDone
 	}
 
@@ -121,13 +120,12 @@ func serverHandler(conn net.Conn) {
 
 	for input.Scan() {
 		text := input.Text()
-
+		tcpserver.LogServer(fmt.Sprintf("%s received", text))
 		if text == confirmReplication { // If replication confirmation
 
 			replicationDone <- struct{}{}
 
-		} else if good, request := hostel.MakeRequest(text, true); good {  // If replication requested
-
+		} else if good, request := hostel.MakeRequest(text, true); good { // If replication requested
 			hostel.SubmitRequest(request)
 			tcpserver.LogRequestReplicating(request)
 			Replicate(request)
@@ -142,13 +140,19 @@ func serverHandler(conn net.Conn) {
 func sendToParent(message string) {
 	if parent.connection != nil {
 		fmt.Fprintln(parent.connection, message)
+
+		tcpserver.LogServer(fmt.Sprintf("%s to server %d", message, parent.id))
 	}
 }
 
 // sendToChildren sends a message to children servers
 func sendToChildren(message string) {
+	childrenStr := "["
 	for _, tn := range children {
 		fmt.Fprintln(tn.connection, message)
+		childrenStr += fmt.Sprintf(" %d", tn.id)
 	}
-}
+	childrenStr += " ]"
 
+	tcpserver.LogServer(fmt.Sprintf("%s to servers %s", message, childrenStr))
+}

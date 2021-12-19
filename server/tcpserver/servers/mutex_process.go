@@ -22,7 +22,8 @@ var queue = list.New()
 
 // Defines the state of the mutex noDemand (= 0), demanding (= 1), inSection (= 2)
 var state int
-const noDemand  = 0
+
+const noDemand = 0
 const demanding = 1
 const inSection = 2
 
@@ -37,8 +38,10 @@ func MutexCore() {
 			doLeave()
 		case msg := <-onMessage:
 			switch msg.MessageType {
-			case token: doHandleToken(msg)
-			case req: doHandleReq(msg)
+			case token:
+				doHandleToken(msg)
+			case req:
+				doHandleReq(msg)
 			}
 		}
 	}
@@ -74,11 +77,11 @@ func doDemand() {
 		if state == noDemand {
 			state = demanding
 			sendToParent(serialize(message{MessageType: req,
-				                           SrcServer: config.GetLocalServerNumber()}))
+				SrcServer: config.GetLocalServerNumber()}))
 		}
 	} else { // we are root we going in.
 		state = inSection
-		allow<-struct{}{}
+		allow <- struct{}{}
 	}
 
 }
@@ -86,45 +89,42 @@ func doDemand() {
 // doLeave function called when client process leaves the mutex
 func doLeave() {
 	state = noDemand
-
 	if queue.Len() != 0 {
 
 		// Getting next req.
 		front := queue.Front()
 		queue.Remove(front)
-
 		// Child become parent
 		parent = children[front.Value.(uint)]
 		delete(children, front.Value.(uint))
 
 		sendToParent(serialize(message{MessageType: token,
-									   SrcServer: config.GetLocalServerNumber()}))
+			SrcServer: config.GetLocalServerNumber()}))
 
 		if queue.Len() != 0 {
 			state = demanding
 			sendToParent(serialize(message{MessageType: req,
-										   SrcServer: config.GetLocalServerNumber()}))
+				SrcServer: config.GetLocalServerNumber()}))
+
 		}
 	}
 }
 
 // doHandleReq handles an incoming req message
-func doHandleReq (msg message) {
+func doHandleReq(msg message) {
 	if parent.id == config.GetLocalServerNumber() && state == noDemand {
-
 		// Child become parent
 		parent = children[msg.SrcServer]
 		delete(children, msg.SrcServer)
 
 		sendToParent(serialize(message{MessageType: token,
-									   SrcServer: config.GetLocalServerNumber()}))
+			SrcServer: config.GetLocalServerNumber()}))
 	} else {
 		queue.PushBack(msg.SrcServer)
-
 		if parent.id != config.GetLocalServerNumber() && state == noDemand {
 			state = demanding
 			sendToParent(serialize(message{MessageType: req,
-										   SrcServer: config.GetLocalServerNumber()}))
+				SrcServer: config.GetLocalServerNumber()}))
 		}
 	}
 }
@@ -139,7 +139,7 @@ func doHandleToken(msg message) {
 		children[parent.id] = parent
 		parent = treeNode{id: front.Value.(uint), connection: nil}
 		state = inSection
-		allow<-struct{}{}
+		allow <- struct{}{}
 	} else {
 		// Child becomes parent and parent becomes child
 		temp := parent
@@ -148,12 +148,12 @@ func doHandleToken(msg message) {
 		children[temp.id] = temp
 
 		sendToParent(serialize(message{MessageType: token,
-									   SrcServer: config.GetLocalServerNumber()}))
+			SrcServer: config.GetLocalServerNumber()}))
 
 		if queue.Len() != 0 {
 			state = demanding
 			sendToParent(serialize(message{MessageType: req,
-										   SrcServer: config.GetLocalServerNumber()}))
+				SrcServer: config.GetLocalServerNumber()}))
 		} else {
 			state = noDemand
 		}
