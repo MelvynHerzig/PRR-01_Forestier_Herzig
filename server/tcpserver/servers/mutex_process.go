@@ -39,7 +39,7 @@ func MutexCore() {
 		case msg := <-onMessage:
 			switch msg.MessageType {
 			case token:
-				doHandleToken(msg)
+				doHandleToken()
 			case req:
 				doHandleReq(msg)
 			}
@@ -130,7 +130,7 @@ func doHandleReq(msg message) {
 }
 
 // doHandleToken handles an incoming token message
-func doHandleToken(msg message) {
+func doHandleToken() {
 	// Getting next req.
 	front := queue.Front()
 	queue.Remove(front)

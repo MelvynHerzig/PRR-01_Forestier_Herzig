@@ -348,18 +348,20 @@ De plus, lorsqu'un processus entre dans le mutex, il se met en pause afin d'avoi
 De ce fait, il est possible de vérifier que la gestion du mutex est conforme.
 
 ## Distinctions
-Il existe deux types de log:
+Il existe quatres types de log:
 * RISK: log une requête effectuée dans la zone partagée localement entre les clients. (goroutine gérant l'hôtel, hostelManager).
 * SAFE: log une réception ou un envoi depuis/vers le client (goroutine gérant la communication spécifique à chaque client, clientHandler). Ce type de log peut apparaître au milieu d'un passage en zone concurrente sans problème.
-* MUTEX: log les interactions avec le mutex. Le log affiche la demande, l'attente, l'entrée et la sortie du mutex. 
+* MUTEX: log les interactions avec le mutex. Le log affiche la demande, l'attente, l'entrée et la sortie du mutex.
+* SERVER: log les interactions entre les serveurs. Notamment les réplications et les transmisions du token.
 
 Théoriquement, pour une bonne gestion de la concurrence, les logs qui indiquent un passage (entrée puis sortie) en zone partagé ne doivent pas se chevaucher.
 
-__Correct__ \
-`1  DEBUG >> Nov 25 15:25:37 SAFE) From 127.0.0.1:1280: LOGIN Alec`\
+Principes (Log simplifiés) \
+
+`1  DEBUG >> Nov 25 15:25:37 SAFE) From 127.0.0.1:1280: LOGIN Quentin`\
 `2  DEBUG >> Nov 25 15:25:37 RISK) --------- Enter shared zone ---------`\
 `3  DEBUG >> Nov 25 15:25:35 SAFE) From 127.0.0.1:1074: LOGIN Melvyn`\
-`4  DEBUG >> Nov 25 15:25:37 RISK) LOGIN with username: Alec HANDLING`\
+`4  DEBUG >> Nov 25 15:25:37 RISK) LOGIN with username: Quentin HANDLING`\
 `5  DEBUG >> Nov 25 15:25:37 MUTEX) --------- Asking ---------`\
 `6  DEBUG >> Nov 25 15:25:37 MUTEX) --------- Waiting ---------`\
 `7  DEBUG >> Nov 25 15:25:49 MUTEX) --------- Entering ---------`\
@@ -380,20 +382,25 @@ Cet exemple montre un cas d'exécution correct. Il n'y a qu'une exécution au se
 
 ## Vérification manuelle
 
+### __Scénario d'example__
+
 Pour vérifier manuellement la concurrence suivez les étapes suivantes:
 * Editer le fichier de configuration (config.json) afin d'activer le mode debug
 
 * Démarrer tous les serveurs présents dans le fichier de configuration debug\
-(au minimum 2 serveurs)\
+(au minimum 5 serveurs)\
 `$go run . 0`\
 `$go run . 1`\
 `$go run . 2`\
+`$go run . 3`\
+`$go run . 4`\
  ...
 
-* Démarrer trois clients (A, B et C) \
+* Démarrer quatre clients (A, B, C et D) \
 `$go run . 0` (A) \
 `$go run . 0` (B) \
-`$go run . 1` (C) 
+`$go run . 1` (C) \
+`$go run . 3` (D) 
 
 * Identifier les clients
   * A \
@@ -402,127 +409,639 @@ Pour vérifier manuellement la concurrence suivez les étapes suivantes:
   `LOGIN B`
   * C \
   `LOGIN C`
-> Lors du traitement de la première requête, celle-ci va s'arrêter pendant 15 secondes 
-pour laisser le temps aux 2 autres requêtes d'arriver.
+  * D \
+  `LOGIN D`
 
-* Envoyer la même requête depuis les trois clients
+> Lors du traitement de la première requête, celle-ci va s'arrêter pendant 15 secondes 
+pour laisser le temps aux 3 autres requêtes d'arriver.
+
+* Envoyer la même requête depuis les quatres clients dès que possible
   * A \
   `BOOK 1 1 1`
   * B \
   `BOOK 1 1 1`
   * C \
   `BOOK 1 1 1`
+  * D \
+  `BOOK 1 1 1`
 
-* Attendre la fin des 20 secondes.
+
 > Normalement, un client reçoit une validation et les autres une erreur.
 
 ### Analyse d'une sortie des logs.
 
 __Server 0__\
-`1 DEBUG >> Nov 25 18:54:07 SAFE) To 127.0.0.1:2109: WELCOME { … }`\
-`2 DEBUG >> Nov 25 18:54:09 SAFE) To 127.0.0.1:2116: WELCOME { … }`\
-`3 DEBUG >> Nov 25 18:54:14 SAFE) From 127.0.0.1:2109: LOGIN A`\
-`4 DEBUG >> Nov 25 18:54:14 RISK) --------- Enter shared zone ---------`\
-`5 DEBUG >> Nov 25 18:54:14 RISK) LOGIN with username: A HANDLING`\
-`6 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Asking ---------`\
-`7 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Waiting ---------`\
-`8 DEBUG >> Nov 25 18:54:14 MUTEX) --------- Entering ---------`\
-`9 DEBUG >> Nov 25 18:54:17 SAFE) From 127.0.0.1:2116: LOGIN B`\
-`10 DEBUG >> Nov 25 18:54:29 RISK) RESULT_LOGIN SUCCESS`\
-`11 DEBUG >> Nov 25 18:54:29 SAFE) To 127.0.0.1:2109: RESULT_LOGIN`\
-`12 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Leaving ---------`\
-`13 DEBUG >> Nov 25 18:54:29 RISK) --------- Leave shared zone ---------`\
-`14 DEBUG >> Nov 25 18:54:29 RISK) --------- Enter shared zone ---------`\
-`15 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: B HANDLING`\
-`16 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Asking ---------`\
-`17 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Waiting ---------`\
-`18 DEBUG >> Nov 25 18:54:33 SAFE) From 127.0.0.1:2109: BOOK 1 1 1`\
-`19 DEBUG >> Nov 25 18:54:44 RISK) LOGIN with username: C REPLICATING`\
-`20 DEBUG >> Nov 25 18:54:44 MUTEX) --------- Entering ---------`\
-`21 DEBUG >> Nov 25 18:54:59 RISK) RESULT_LOGIN SUCCESS`\
-`22 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Leaving ---------`\
-`23 DEBUG >> Nov 25 18:54:59 RISK) --------- Leave shared zone ---------`\
-`24 DEBUG >> Nov 25 18:54:59 RISK) --------- Enter shared zone ---------`\
-`25 DEBUG >> Nov 25 18:54:59 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`26 DEBUG >> Nov 25 18:54:59 SAFE) To 127.0.0.1:2116: RESULT_LOGIN`\
-`27 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Asking ---------`\
-`28 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Waiting ---------`\
-`29 DEBUG >> Nov 25 18:55:02 SAFE) From 127.0.0.1:2116: BOOK 1 1 1`\
-`30 DEBUG >> Nov 25 18:55:14 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING`\
-`31 DEBUG >> Nov 25 18:55:14 MUTEX) --------- Entering ---------`\
-`32 DEBUG >> Nov 25 18:55:29 RISK) Room already booked ERROR`\
-`33 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Leaving ---------`\
-`34 DEBUG >> Nov 25 18:55:29 SAFE) To 127.0.0.1:2109: ERROR Room already booked`\
-`35 DEBUG >> Nov 25 18:55:29 RISK) --------- Leave shared zone ---------`\
-`36 DEBUG >> Nov 25 18:55:29 RISK) --------- Enter shared zone ---------`\
-`37 DEBUG >> Nov 25 18:55:29 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`38 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Asking ---------`\
-`39 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Waiting ---------`\
-`40 DEBUG >> Nov 25 18:55:29 MUTEX) --------- Entering ---------`\
-`41 DEBUG >> Nov 25 18:55:44 RISK) Room already booked ERROR`\
-`42 DEBUG >> Nov 25 18:55:44 MUTEX) --------- Leaving ---------`\
-`43 DEBUG >> Nov 25 18:55:44 SAFE) To 127.0.0.1:2116: ERROR Room already booked`\
-`44 DEBUG >> Nov 25 18:55:44 RISK) --------- Leave shared zone ---------`\
+`1  Parent 2 connected `\
+`2  DEBUG >> Dec 19 17:29:24 SERVER) 0 to server 2`\
+`3  DEBUG >> Dec 19 17:29:28 SERVER) GO to servers [ ]`\
+`4  Server 0 ready to handle clients`\
+`5  DEBUG >> Dec 19 17:31:10 SAFE) To 127.0.0.1:5152: WELCOME { ... }`\
+`6  DEBUG >> Dec 19 17:31:13 SAFE) To 127.0.0.1:5154: WELCOME { ... }`\
+`7  DEBUG >> Dec 19 17:31:46 SAFE) From 127.0.0.1:5152: LOGIN A`\
+`8  DEBUG >> Dec 19 17:31:46 RISK) --------- Enter shared zone ---------`\
+`9  DEBUG >> Dec 19 17:31:46 RISK) LOGIN with username: A HANDLING`\
+`10  DEBUG >> Dec 19 17:31:46 MUTEX) --------- Asking ---------`\
+`11  DEBUG >> Dec 19 17:31:46 MUTEX) --------- Waiting ---------`\
+`12  DEBUG >> Dec 19 17:31:46 SERVER) req 0 to server 2`\
+`13  DEBUG >> Dec 19 17:31:46 SERVER) token 2 received`\
+`14  DEBUG >> Dec 19 17:31:46 MUTEX) --------- Entering ---------`\
+`15  DEBUG >> Dec 19 17:31:49 SAFE) From 127.0.0.1:5154: LOGIN B`\
+`16  DEBUG >> Dec 19 17:31:52 SERVER) req 2 received`\
+`17  DEBUG >> Dec 19 17:32:01 RISK) RESULT_LOGIN SUCCESS `\
+`18  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A to servers [ 2 ]`\
+`19  DEBUG >> Dec 19 17:32:01 SERVER) OK received`\
+`20  DEBUG >> Dec 19 17:32:01 MUTEX) --------- Leaving ---------`\
+`21  DEBUG >> Dec 19 17:32:01 RISK) --------- Leave shared zone ---------`\
+`22  DEBUG >> Dec 19 17:32:01 RISK) --------- Enter shared zone ---------`\
+`23  DEBUG >> Dec 19 17:32:01 RISK) LOGIN with username: B HANDLING`\
+`24  DEBUG >> Dec 19 17:32:01 MUTEX) --------- Asking ---------`\
+`25  DEBUG >> Dec 19 17:32:01 SAFE) To 127.0.0.1:5152: RESULT_LOGIN`\
+`26  DEBUG >> Dec 19 17:32:01 SERVER) token 0 to server 2`\
+`27  DEBUG >> Dec 19 17:32:01 SERVER) req 0 to server 2`\
+`28  DEBUG >> Dec 19 17:32:01 MUTEX) --------- Waiting ---------`\
+`29  DEBUG >> Dec 19 17:32:09 SAFE) From 127.0.0.1:5152: BOOK 1 1 1`\
+`30  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C received`\
+`31  DEBUG >> Dec 19 17:32:16 RISK) LOGIN with username: C REPLICATING `\
+`32  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C to servers [ ]`\
+`33  DEBUG >> Dec 19 17:32:16 SERVER) OK to server 2`\
+`34  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D received`\
+`35  DEBUG >> Dec 19 17:32:31 RISK) LOGIN with username: D REPLICATING `\
+`36  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D to servers [ ]`\
+`37  DEBUG >> Dec 19 17:32:31 SERVER) OK to server 2`\
+`38  DEBUG >> Dec 19 17:32:31 SERVER) token 2 received`\
+`39  DEBUG >> Dec 19 17:32:31 MUTEX) --------- Entering ---------`\
+`40  DEBUG >> Dec 19 17:32:31 SERVER) req 2 received`\
+`41  DEBUG >> Dec 19 17:32:46 RISK) RESULT_LOGIN SUCCESS `\
+`42  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B to servers [ 2 ]`\
+`43  DEBUG >> Dec 19 17:32:46 SERVER) OK received`\
+`44  DEBUG >> Dec 19 17:32:46 MUTEX) --------- Leaving ---------`\
+`45  DEBUG >> Dec 19 17:32:46 RISK) --------- Leave shared zone ---------`\
+`46  DEBUG >> Dec 19 17:32:46 RISK) --------- Enter shared zone ---------`\
+`47  DEBUG >> Dec 19 17:32:46 SAFE) To 127.0.0.1:5154: RESULT_LOGIN`\
+`48  DEBUG >> Dec 19 17:32:46 SERVER) token 0 to server 2`\
+`49  DEBUG >> Dec 19 17:32:46 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`50  DEBUG >> Dec 19 17:32:46 MUTEX) --------- Asking ---------`\
+`51  DEBUG >> Dec 19 17:32:46 MUTEX) --------- Waiting ---------`\
+`52  DEBUG >> Dec 19 17:32:46 SERVER) req 0 to server 2`\
+`53  DEBUG >> Dec 19 17:32:51 SAFE) From 127.0.0.1:5154: BOOK 1 1 1`\
+`54  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C received`\
+`55  DEBUG >> Dec 19 17:33:01 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`56  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C to servers [ ]`\
+`57  DEBUG >> Dec 19 17:33:01 SERVER) OK to server 2`\
+`58  DEBUG >> Dec 19 17:33:16 SERVER) token 2 received`\
+`59  DEBUG >> Dec 19 17:33:16 MUTEX) --------- Entering ---------`\
+`60  DEBUG >> Dec 19 17:33:31 RISK) Room already booked ERROR `\
+`61  DEBUG >> Dec 19 17:33:31 MUTEX) --------- Leaving ---------`\
+`62  DEBUG >> Dec 19 17:33:31 RISK) --------- Leave shared zone ---------`\
+`63  DEBUG >> Dec 19 17:33:31 RISK) --------- Enter shared zone ---------`\
+`64  DEBUG >> Dec 19 17:33:31 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`65  DEBUG >> Dec 19 17:33:31 MUTEX) --------- Asking ---------`\
+`66  DEBUG >> Dec 19 17:33:31 MUTEX) --------- Waiting ---------`\
+`67  DEBUG >> Dec 19 17:33:31 MUTEX) --------- Entering ---------`\
+`68  DEBUG >> Dec 19 17:33:31 SAFE) To 127.0.0.1:5152: ERROR Room already booked`\
+`69  DEBUG >> Dec 19 17:33:46 RISK) Room already booked ERROR `\
+`70  DEBUG >> Dec 19 17:33:46 MUTEX) --------- Leaving ---------`\
+`71  DEBUG >> Dec 19 17:33:46 RISK) --------- Leave shared zone ---------`\
+`72  DEBUG >> Dec 19 17:33:46 SAFE) To 127.0.0.1:5154: ERROR Room already booked`\
 
+> __Ligne 1-4)__ Mise en place de la connexion avec les parents/enfants. On peut voir que ce serveur n'a pas d'enfants au démarrage.
 
+> __Lignes 7-14)__ Le serveur reçoit une demande, entre dans la zone à risque locale, demande le mutex, reçoit le token et entre en SC
 
-> __Ligne 3)__ Le serveur une requête de login du client ayant l'adresse 127.0.0.1:27358
+> __Ligne 16)__ Reçoit une demande du serveur 2
 
-> __Lignes 4-5)__ Le serveur entre dans la section critique pour la requête
+> __Lignes 18-19)__ Le serveur demande à ses enfants de répliquer la requête. L'enfant répond OK car la réplication a bien été effectuée.
 
-> __Lignes 6-8)__ Le serveur demande l'accès au mutex, attend les réponses et entre dans le mutex
- 
-> __Ligne 9)__ Le serveur reçoit une requête de login du client ayant l'adresse 127.0.0.1:27359, mais le met en attente
+> __Lignes 20-28)__ Le serveur quitte la SC, donne le token car ce n'est pas lui le prochain dans la queue, puis commence à traiter une nouvelle requête. Il redemande l'accès au mutex.
 
-> __Lignes 10-12)__ Le serveur fini le traitement de la requête, quitte le mutex et la section critique
+> __Lignes 30-33)__ Le serveur reçoit une requête a répliqué, la réplique, demande à ses enfants de répliquer la requête, reçoit les OK des enfants, puis envoi OK au parent.
 
-> __Lignes 13-14)__ La 2ème requête reçue passe en section critique
+> __Lignes 38-39)__ Le serveur reçoit le token et peut donc entrer en SC.
 
-> __Lignes 15-20)__ Le serveur demande l'accès au mutex, et attend la réponse. Pendant cette attente, il renvoie le résultat au client A et reçoit une nouvelle requête. On voit que le serveur a dû attendre 15 secondes sur le mutex. Entre temps, le serveur a répliqué une requête fait à un autre serveur (Ligne 19)
-
-> __Ligne 25)__ La requête BOOK du client A est traitée et demande l'accès au mutex.
-
-> __Ligne 30)__ Le serveur réplique la requête actuellement dans le mutex
-
-> __Lignes 32-33)__ Le traitement de la requête BOOK du client est terminé, et une erreur est survenue car la chambre a déjà été réservée sur un autre serveur
+> __Lignes 56-60)__ Le serveur réplique la réservation `BOOK 1 1 1` pour l'utilisateur C. Il obtient ensuite le mutex pour la requête `BOOK 1 1 1` de l'utilisateur A. Cependant, cela est maintenant impossible.
  
 __Server 1__\
-`1 DEBUG >> Nov 25 18:54:11 SAFE) To 127.0.0.1:2117: WELCOME { … }`\
-`2 DEBUG >> Nov 25 18:54:21 SAFE) From 127.0.0.1:2117: LOGIN C`\
-`3 DEBUG >> Nov 25 18:54:21 RISK) --------- Enter shared zone ---------`\
-`4 DEBUG >> Nov 25 18:54:21 RISK) LOGIN with username: C HANDLING`\
-`5 DEBUG >> Nov 25 18:54:21 MUTEX) --------- Asking ---------`\
-`6 DEBUG >> Nov 25 18:54:21 MUTEX) --------- Waiting ---------`\
-`7 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: A REPLICATING`\
-`8 DEBUG >> Nov 25 18:54:29 MUTEX) --------- Entering ---------`\
-`9 DEBUG >> Nov 25 18:54:44 RISK) RESULT_LOGIN SUCCESS`\
-`10 DEBUG >> Nov 25 18:54:44 MUTEX) --------- Leaving ---------`\
-`11 DEBUG >> Nov 25 18:54:44 RISK) --------- Leave shared zone ---------`\
-`12 DEBUG >> Nov 25 18:54:44 SAFE) To 127.0.0.1:2117: RESULT_LOGIN`\
-`13 DEBUG >> Nov 25 18:54:47 SAFE) From 127.0.0.1:2117: BOOK 1 1 1`\
-`14 DEBUG >> Nov 25 18:54:47 RISK) --------- Enter shared zone ---------`\
-`15 DEBUG >> Nov 25 18:54:47 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
-`16 DEBUG >> Nov 25 18:54:47 MUTEX) --------- Asking ---------`\
-`17 DEBUG >> Nov 25 18:54:47 MUTEX) --------- Waiting ---------`\
-`18 DEBUG >> Nov 25 18:54:59 RISK) LOGIN with username: B REPLICATING`\
-`19 DEBUG >> Nov 25 18:54:59 MUTEX) --------- Entering ---------`\
-`20 DEBUG >> Nov 25 18:55:14 RISK) RESULT_BOOK 1 1 1 SUCCESS`\
-`21 DEBUG >> Nov 25 18:55:14 MUTEX) --------- Leaving ---------`\
-`22 DEBUG >> Nov 25 18:55:14 RISK) --------- Leave shared zone ---------`\
-`23 DEBUG >> Nov 25 18:55:14 SAFE) To 127.0.0.1:2117: RESULT_BOOK 1 1 1`\
+`1  server 2 connected`\
+`2  server 4 connected`\
+`3  DEBUG >> Dec 19 17:29:28 SERVER) GO to servers [ 2 4 ]`\
+`4  Server 1 ready to handle clients`\
+`5  DEBUG >> Dec 19 17:31:24 SAFE) To 127.0.0.1:5174: WELCOME { ... }`\
+`6  DEBUG >> Dec 19 17:31:46 SERVER) req 2 received`\
+`7  DEBUG >> Dec 19 17:31:46 SERVER) token 1 to server 2`\
+`8  DEBUG >> Dec 19 17:31:52 SAFE) From 127.0.0.1:5174: LOGIN C`\
+`9  DEBUG >> Dec 19 17:31:52 RISK) --------- Enter shared zone ---------`\
+`10  DEBUG >> Dec 19 17:31:52 RISK) LOGIN with username: C HANDLING`\
+`11  DEBUG >> Dec 19 17:31:52 MUTEX) --------- Asking ---------`\
+`12  DEBUG >> Dec 19 17:31:52 MUTEX) --------- Waiting ---------`\
+`13  DEBUG >> Dec 19 17:31:52 SERVER) req 1 to server 2`\
+`14  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A received`\
+`15  DEBUG >> Dec 19 17:32:01 RISK) LOGIN with username: A REPLICATING `\
+`16  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A to servers [ 4 ]`\
+`17  DEBUG >> Dec 19 17:32:01 SERVER) OK received`\
+`18  DEBUG >> Dec 19 17:32:01 SERVER) OK to server 2`\
+`19  DEBUG >> Dec 19 17:32:01 SERVER) token 2 received`\
+`20  DEBUG >> Dec 19 17:32:01 MUTEX) --------- Entering ---------`\
+`21  DEBUG >> Dec 19 17:32:01 SERVER) req 2 received`\
+`22  DEBUG >> Dec 19 17:32:16 RISK) RESULT_LOGIN SUCCESS `\
+`23  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C to servers [ 2 4 ]`\
+`24  DEBUG >> Dec 19 17:32:16 SERVER) OK received`\
+`25  DEBUG >> Dec 19 17:32:16 SERVER) OK received`\
+`26  DEBUG >> Dec 19 17:32:16 MUTEX) --------- Leaving ---------`\
+`27  DEBUG >> Dec 19 17:32:16 RISK) --------- Leave shared zone ---------`\
+`28  DEBUG >> Dec 19 17:32:16 SERVER) token 1 to server 2`\
+`29  DEBUG >> Dec 19 17:32:16 SAFE) To 127.0.0.1:5174: RESULT_LOGIN`\
+`30  DEBUG >> Dec 19 17:32:20 SAFE) From 127.0.0.1:5174: BOOK 1 1 1`\
+`31  DEBUG >> Dec 19 17:32:20 RISK) --------- Enter shared zone ---------`\
+`32  DEBUG >> Dec 19 17:32:20 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`33  DEBUG >> Dec 19 17:32:20 MUTEX) --------- Asking ---------`\
+`34  DEBUG >> Dec 19 17:32:20 MUTEX) --------- Waiting ---------`\
+`35  DEBUG >> Dec 19 17:32:20 SERVER) req 1 to server 2`\
+`36  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D received`\
+`37  DEBUG >> Dec 19 17:32:31 RISK) LOGIN with username: D REPLICATING `\
+`38  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D to servers [ 4 ]`\
+`39  DEBUG >> Dec 19 17:32:31 SERVER) OK received`\
+`40  DEBUG >> Dec 19 17:32:31 SERVER) OK to server 2`\
+`41  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B received`\
+`42  DEBUG >> Dec 19 17:32:46 RISK) LOGIN with username: B REPLICATING `\
+`43  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B to servers [ 4 ]`\
+`44  DEBUG >> Dec 19 17:32:46 SERVER) OK received`\
+`45  DEBUG >> Dec 19 17:32:46 SERVER) OK to server 2`\
+`46  DEBUG >> Dec 19 17:32:46 SERVER) token 2 received`\
+`47  DEBUG >> Dec 19 17:32:46 MUTEX) --------- Entering ---------`\
+`48  DEBUG >> Dec 19 17:32:46 SERVER) req 2 received`\
+`49  DEBUG >> Dec 19 17:33:01 RISK) RESULT_BOOK 1 1 1 SUCCESS `\
+`50  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C to servers [ 2 4 ]`\
+`51  DEBUG >> Dec 19 17:33:01 SERVER) OK received`\
+`52  DEBUG >> Dec 19 17:33:01 SERVER) OK received`\
+`53  DEBUG >> Dec 19 17:33:01 MUTEX) --------- Leaving ---------`\
+`54  DEBUG >> Dec 19 17:33:01 RISK) --------- Leave shared zone ---------`\
+`55  DEBUG >> Dec 19 17:33:01 SERVER) token 1 to server 2`\
+`56  DEBUG >> Dec 19 17:33:01 SAFE) To 127.0.0.1:5174: RESULT_BOOK 1 1 1`\
 
-> __Lignes 13-23)__ Le serveur reçoit une requête BOOK du client C. Il entre en section critique et attend sur le mutex. 
-Après avoir obtenu l'accès au mutex, une réponse positive est renvoyé au client. La chambre est réservée. 
+> __Lignes 1-4)__ Ce serveur étant la racine, il n'essaye pas de se connecter à son parent. Cependant, on peut voir qu'il a des enfants.
 
 __Server 2__\
-`1 DEBUG >> Nov 25 18:54:29 RISK) LOGIN with username: A REPLICATING`\
-`2 DEBUG >> Nov 25 18:54:44 RISK) LOGIN with username: C REPLICATING`\
-`3 DEBUG >> Nov 25 18:54:59 RISK) LOGIN with username: B REPLICATING`\
-`4 DEBUG >> Nov 25 18:55:14 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING`\
+`1  server 0 connected`\
+`2  server 3 connected`\
+`3  Parent 1 connected `\
+`4  DEBUG >> Dec 19 17:29:26 SERVER) 2 to server 1`\
+`5  DEBUG >> Dec 19 17:29:28 SERVER) GO to servers [ 0 3 ]`\
+`6  Server 2 ready to handle clients`\
+`7  DEBUG >> Dec 19 17:31:46 SERVER) req 0 received`\
+`8  DEBUG >> Dec 19 17:31:46 SERVER) req 2 to server 1`\
+`9  DEBUG >> Dec 19 17:31:46 SERVER) token 1 received`\
+`10  DEBUG >> Dec 19 17:31:46 SERVER) token 2 to server 0`\
+`11  DEBUG >> Dec 19 17:31:52 SERVER) req 1 received`\
+`12  DEBUG >> Dec 19 17:31:52 SERVER) req 2 to server 0`\
+`13  DEBUG >> Dec 19 17:31:55 SERVER) req 3 received`\
+`14  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A received`\
+`15  DEBUG >> Dec 19 17:32:01 RISK) LOGIN with username: A REPLICATING `\
+`16  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A to servers [ 1 3 ]`\
+`17  DEBUG >> Dec 19 17:32:01 SERVER) OK received`\
+`18  DEBUG >> Dec 19 17:32:01 SERVER) OK received`\
+`19  DEBUG >> Dec 19 17:32:01 SERVER) OK to server 0`\
+`20  DEBUG >> Dec 19 17:32:01 SERVER) token 0 received`\
+`21  DEBUG >> Dec 19 17:32:01 SERVER) token 2 to server 1`\
+`22  DEBUG >> Dec 19 17:32:01 SERVER) req 2 to server 1`\
+`23  DEBUG >> Dec 19 17:32:01 SERVER) req 0 received`\
+`24  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C received`\
+`25  DEBUG >> Dec 19 17:32:16 RISK) LOGIN with username: C REPLICATING `\
+`26  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C to servers [ 0 3 ]`\
+`27  DEBUG >> Dec 19 17:32:16 SERVER) OK received`\
+`28  DEBUG >> Dec 19 17:32:16 SERVER) OK received`\
+`29  DEBUG >> Dec 19 17:32:16 SERVER) OK to server 1`\
+`30  DEBUG >> Dec 19 17:32:16 SERVER) token 1 received`\
+`31  DEBUG >> Dec 19 17:32:16 SERVER) token 2 to server 3`\
+`32  DEBUG >> Dec 19 17:32:16 SERVER) req 2 to server 3`\
+`33  DEBUG >> Dec 19 17:32:20 SERVER) req 1 received`\
+`34  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D received`\
+`35  DEBUG >> Dec 19 17:32:31 RISK) LOGIN with username: D REPLICATING `\
+`36  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D to servers [ 0 1 ]`\
+`37  DEBUG >> Dec 19 17:32:31 SERVER) OK received`\
+`38  DEBUG >> Dec 19 17:32:31 SERVER) OK received`\
+`39  DEBUG >> Dec 19 17:32:31 SERVER) OK to server 3`\
+`40  DEBUG >> Dec 19 17:32:31 SERVER) token 3 received`\
+`41  DEBUG >> Dec 19 17:32:31 SERVER) token 2 to server 0`\
+`42  DEBUG >> Dec 19 17:32:31 SERVER) req 2 to server 0`\
+`43  DEBUG >> Dec 19 17:32:40 SERVER) req 3 received`\
+`44  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B received`\
+`45  DEBUG >> Dec 19 17:32:46 RISK) LOGIN with username: B REPLICATING `\
+`46  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B to servers [ 3 1 ]`\
+`47  DEBUG >> Dec 19 17:32:46 SERVER) OK received`\
+`48  DEBUG >> Dec 19 17:32:46 SERVER) OK received`\
+`49  DEBUG >> Dec 19 17:32:46 SERVER) OK to server 0`\
+`50  DEBUG >> Dec 19 17:32:46 SERVER) token 0 received`\
+`51  DEBUG >> Dec 19 17:32:46 SERVER) token 2 to server 1`\
+`52  DEBUG >> Dec 19 17:32:46 SERVER) req 2 to server 1`\
+`53  DEBUG >> Dec 19 17:32:46 SERVER) req 0 received`\
+`54  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C received`\
+`55  DEBUG >> Dec 19 17:33:01 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`56  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C to servers [ 3 0 ]`\
+`57  DEBUG >> Dec 19 17:33:01 SERVER) OK received`\
+`58  DEBUG >> Dec 19 17:33:01 SERVER) OK received`\
+`59  DEBUG >> Dec 19 17:33:01 SERVER) OK to server 1`\
+`60  DEBUG >> Dec 19 17:33:01 SERVER) token 1 received`\
+`61  DEBUG >> Dec 19 17:33:01 SERVER) token 2 to server 3`\
+`62  DEBUG >> Dec 19 17:33:01 SERVER) req 2 to server 3`\
+`63  DEBUG >> Dec 19 17:33:16 SERVER) token 3 received`\
+`64  DEBUG >> Dec 19 17:33:16 SERVER) token 2 to server 0`\
 
-> __Lignes 1-4)__ Le serveur n'a reçu de requête d'aucun client. Cependant, il a répliqué toutes les requêtes des autres serveurs ayant obtenu une réponse positive.
+> Aucune nouvelle sitatution particulière ne s'est produite sur ce serveur.
 
-Comme nous pouvons le voir, aucune entrée en zone partagée n'est effectuée tant que l'entrée précédente n'est pas terminée. Chaque entrée partagée contient le traitement d'une seule requête. En conclusion, la gestion des accès concurrents est correcte.
+
+__Server 3__\
+`1  Parent 2 connected `\
+`2  DEBUG >> Dec 19 17:29:26 SERVER) 3 to server 2`\
+`3  DEBUG >> Dec 19 17:29:28 SERVER) GO to servers [ ]`\
+`4  Server 3 ready to handle clients`\
+`5  DEBUG >> Dec 19 17:31:32 SAFE) To 127.0.0.1:5185: WELCOME { ... }`\
+`6  DEBUG >> Dec 19 17:31:55 SAFE) From 127.0.0.1:5185: LOGIN D`\
+`7  DEBUG >> Dec 19 17:31:55 RISK) --------- Enter shared zone ---------`\
+`8  DEBUG >> Dec 19 17:31:55 RISK) LOGIN with username: D HANDLING`\
+`9  DEBUG >> Dec 19 17:31:55 MUTEX) --------- Asking ---------`\
+`10  DEBUG >> Dec 19 17:31:55 MUTEX) --------- Waiting ---------`\
+`11  DEBUG >> Dec 19 17:31:55 SERVER) req 3 to server 2`\
+`12  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A received`\
+`13  DEBUG >> Dec 19 17:32:01 RISK) LOGIN with username: A REPLICATING `\
+`14  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A to servers [ ]`\
+`15  DEBUG >> Dec 19 17:32:01 SERVER) OK to server 2`\
+`16  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C received`\
+`17  DEBUG >> Dec 19 17:32:16 RISK) LOGIN with username: C REPLICATING `\
+`18  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C to servers [ ]`\
+`19  DEBUG >> Dec 19 17:32:16 SERVER) OK to server 2`\
+`20  DEBUG >> Dec 19 17:32:16 SERVER) token 2 received`\
+`21  DEBUG >> Dec 19 17:32:16 SERVER) req 2 received`\
+`22  DEBUG >> Dec 19 17:32:16 MUTEX) --------- Entering ---------`\
+`23  DEBUG >> Dec 19 17:32:31 RISK) RESULT_LOGIN SUCCESS `\
+`24  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D to servers [ 2 ]`\
+`25  DEBUG >> Dec 19 17:32:31 SERVER) OK received`\
+`26  DEBUG >> Dec 19 17:32:31 MUTEX) --------- Leaving ---------`\
+`27  DEBUG >> Dec 19 17:32:31 RISK) --------- Leave shared zone ---------`\
+`28  DEBUG >> Dec 19 17:32:31 SERVER) token 3 to server 2`\
+`29  DEBUG >> Dec 19 17:32:31 SAFE) To 127.0.0.1:5185: RESULT_LOGIN`\
+`30  DEBUG >> Dec 19 17:32:40 SAFE) From 127.0.0.1:5185: BOOK 1 1 1`\
+`31  DEBUG >> Dec 19 17:32:40 RISK) --------- Enter shared zone ---------`\
+`32  DEBUG >> Dec 19 17:32:40 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`33  DEBUG >> Dec 19 17:32:40 MUTEX) --------- Asking ---------`\
+`34  DEBUG >> Dec 19 17:32:40 MUTEX) --------- Waiting ---------`\
+`35  DEBUG >> Dec 19 17:32:40 SERVER) req 3 to server 2`\
+`36  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B received`\
+`37  DEBUG >> Dec 19 17:32:46 RISK) LOGIN with username: B REPLICATING `\
+`38  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B to servers [ ]`\
+`39  DEBUG >> Dec 19 17:32:46 SERVER) OK to server 2`\
+`40  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C received`\
+`41  DEBUG >> Dec 19 17:33:01 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`42  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C to servers [ ]`\
+`43  DEBUG >> Dec 19 17:33:01 SERVER) OK to server 2`\
+`44  DEBUG >> Dec 19 17:33:01 SERVER) token 2 received`\
+`45  DEBUG >> Dec 19 17:33:01 SERVER) req 2 received`\
+`46  DEBUG >> Dec 19 17:33:01 MUTEX) --------- Entering ---------`\
+`47  DEBUG >> Dec 19 17:33:16 RISK) Room already booked ERROR `\
+`48  DEBUG >> Dec 19 17:33:16 MUTEX) --------- Leaving ---------`\
+`49  DEBUG >> Dec 19 17:33:16 RISK) --------- Leave shared zone ---------`\
+`50  DEBUG >> Dec 19 17:33:16 SERVER) token 3 to server 2`\
+`51  DEBUG >> Dec 19 17:33:16 SAFE) To 127.0.0.1:5185: ERROR Room already booked`\
+
+> Aucune nouvelle sitatution particulière ne s'est produite sur ce serveur.
+
+__Server 4__\
+`1  Parent 1 connected `\
+`2  DEBUG >> Dec 19 17:29:28 SERVER) 4 to server 1`\
+`3  DEBUG >> Dec 19 17:29:28 SERVER) GO to servers [ ]`\
+`4  Server 4 ready to handle clients`\
+`5  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A received`\
+`6  DEBUG >> Dec 19 17:32:01 RISK) LOGIN with username: A REPLICATING `\
+`7  DEBUG >> Dec 19 17:32:01 SERVER) LOGIN A to servers [ ]`\
+`8  DEBUG >> Dec 19 17:32:01 SERVER) OK to server 1`\
+`9  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C received`\
+`10  DEBUG >> Dec 19 17:32:16 RISK) LOGIN with username: C REPLICATING `\
+`11  DEBUG >> Dec 19 17:32:16 SERVER) LOGIN C to servers [ ]`\
+`12  DEBUG >> Dec 19 17:32:16 SERVER) OK to server 1`\
+`13  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D received`\
+`14  DEBUG >> Dec 19 17:32:31 RISK) LOGIN with username: D REPLICATING `\
+`15  DEBUG >> Dec 19 17:32:31 SERVER) LOGIN D to servers [ ]`\
+`16  DEBUG >> Dec 19 17:32:31 SERVER) OK to server 1`\
+`17  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B received`\
+`18  DEBUG >> Dec 19 17:32:46 RISK) LOGIN with username: B REPLICATING `\
+`19  DEBUG >> Dec 19 17:32:46 SERVER) LOGIN B to servers [ ]`\
+`20  DEBUG >> Dec 19 17:32:46 SERVER) OK to server 1`\
+`21  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C received`\
+`22  DEBUG >> Dec 19 17:33:01 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`23  DEBUG >> Dec 19 17:33:01 SERVER) BOOK 1 1 1 C to servers [ ]`\
+`24  DEBUG >> Dec 19 17:33:01 SERVER) OK to server 1`\
+
+> Aucune nouvelle sitatution particulière ne s'est produite sur ce serveur.
+
+__Globalement__\
+- On peut voir que tous les serveurs répliquent les requêtes. 
+- On vérifie que tous se passe bien pour chaque enfant avant d'envoyer le OK au parent.
+- Une entrée en SC arrive toujours après une sortie (sauf la première fois).
+
+### __Branches d'exécution possibles__
+Voici la liste des situations possible :
+
+Lors d'une demande :
+- A) En tant que noeud non racine, ayant déjà fait une demande ( state = demanding) -> mettre dans la queue  la demande.
+- B) En tant que noeud non racine, n'ayant pas déjà fait une demande (state = noDemand) -> mettre dans la queue la demande et passage de state à inDemand
+- C) En tant que racine -> accède au mutex
+
+Lors de la sortie de section critique :
+- D) La queue est vide -> repasse à noDemand et la queue est vide
+- E) La queue contient 1 demande -> repasse à noDemand et dépile la prochaine requête depuis la queue, envoie le token, la queue est vide
+- F) La queue contient 2 ou plus demandes -> repasse à noDemand et dépile la prochaine requête depuis la queue, envoie le token, la queue n'est pas vide, envoie donc une REQ pour récupérer le token
+
+Traitement d'une requête en provenance d'un autre serveur :
+- G) le serveur est racine avec un état noDemand -> l'expéditeur devient sont parent et il lui envoie le token
+- H) Le serveur est en SC OU le serveur n'est pas racine mais a déjà envoyé une demande -> stocke la requête dans sa queue.
+- I) le serveur n'est pas racine et n'a pas déjà envoyé une demande -> stocke la requête dans sa queue et envoie une demande à son parent.
+
+Traîtement du token en provenance de son parent :
+- J) dépile la queue, la requête dépilée vient du serveur courrant -> le serveur devient la racine et entre en SC
+- k) dépile la queue, la requête provient d'un enfant, la queue est vide -> l'enfant devient le parent, le token lui est passé, passage à l'état noDemand
+- L) dépile la queue, la requête provient d'un enfant, la queue n'est pas vide -> l'enfant devient le parent, le token lui es passé, passage à l'état demanding et envoie une requête à son parent.
+
+
+Avec l'arborescence des serveurs ainsi que les demandes suivantes :
+![Arboresence et requêtes](https://user-images.githubusercontent.com/61196479/146681150-c8d098f1-c451-4cd9-8616-29ad467cf31e.png)
+
+> À noter : Nous ne pouvons pas garantir à 100% l'ordre d'exécution. Dans les logs qui suivent, la requête `LOGIN 0` a été exécuté APRÈS la requête `LOGIN 4` malgré l'ordre.
+
+Nous obtenons les logs suivants :
+
+__Serveur 0__\
+`1  Parent 2 connected `\
+`2  DEBUG >> Dec 16 17:55:45 SERVER) 0 to server 2`\
+`3  DEBUG >> Dec 16 17:55:49 SERVER) GO to servers [ ]`\
+`4  Server 0 ready to handle clients`\
+`5  DEBUG >> Dec 16 17:55:58 SAFE) To 127.0.0.1:28422: WELCOME { ... }`\
+`6  DEBUG >> Dec 16 17:56:34 SAFE) From 127.0.0.1:28422: LOGIN 0`\
+`7  DEBUG >> Dec 16 17:56:34 RISK) --------- Enter shared zone ---------`\
+`8  DEBUG >> Dec 16 17:56:34 RISK) LOGIN with username: 0 HANDLING `\
+`9  DEBUG >> Dec 16 17:56:34 MUTEX) --------- Asking ---------`\
+`10  DEBUG >> Dec 16 17:56:34 MUTEX) --------- Waiting ---------`\
+`12  DEBUG >> Dec 16 17:56:34 SERVER) Scénario B`\
+`13  DEBUG >> Dec 16 17:56:34 SERVER) req 0 to server 2`\
+`14  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 received`\
+`15  DEBUG >> Dec 16 17:56:43 RISK) LOGIN with username: 3 REPLICATING `\
+`16  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 to servers [ ]`\
+`17  DEBUG >> Dec 16 17:56:43 SERVER) OK to server 2`\
+`18  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 received`\
+`19  DEBUG >> Dec 16 17:56:58 RISK) LOGIN with username: 1 REPLICATING `\
+`20  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 to servers [ ]`\
+`21  DEBUG >> Dec 16 17:56:58 SERVER) OK to server 2`\
+`22  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 received`\
+`23  DEBUG >> Dec 16 17:57:13 RISK) LOGIN with username: 4 REPLICATING `\
+`24  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 to servers [ ]`\
+`25  DEBUG >> Dec 16 17:57:13 SERVER) OK to server 2`\
+`26  DEBUG >> Dec 16 17:57:13 SERVER) token 2 received`\
+`27  DEBUG >> Dec 16 17:57:13 SERVER) Scénario J`\
+`28  DEBUG >> Dec 16 17:57:13 MUTEX) --------- Entering ---------`\
+`29  DEBUG >> Dec 16 17:57:28 RISK) RESULT_LOGIN SUCCESS `\
+`30  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 to servers [ 2 ]`\
+`31  DEBUG >> Dec 16 17:57:28 SERVER) OK received`\
+`32  DEBUG >> Dec 16 17:57:28 MUTEX) --------- Leaving ---------`\
+`33  DEBUG >> Dec 16 17:57:28 RISK) --------- Leave shared zone ---------`\
+`34  DEBUG >> Dec 16 17:57:28 SERVER) Scénario D`\
+`35  DEBUG >> Dec 16 17:57:28 SAFE) To 127.0.0.1:28422: RESULT_LOGIN`\
+`36  DEBUG >> Dec 16 18:00:12 SAFE) From 127.0.0.1:28422: BOOK 1 1 1`\
+`37  DEBUG >> Dec 16 18:00:12 RISK) --------- Enter shared zone ---------`\
+`38  DEBUG >> Dec 16 18:00:12 RISK) BOOK room 1 from night 1 for 1 night(s) HANDLING`\
+`39  DEBUG >> Dec 16 18:00:12 MUTEX) --------- Asking ---------`\
+`40  DEBUG >> Dec 16 18:00:12 MUTEX) --------- Waiting ---------`\
+`41  DEBUG >> Dec 16 18:00:12 SERVER) Scénario C`\
+`42  DEBUG >> Dec 16 18:00:12 MUTEX) --------- Entering ---------`\
+`43  DEBUG >> Dec 16 18:00:27 RISK) RESULT_BOOK 1 1 1 SUCCESS `\
+`44  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 to servers [ 2 ]`\
+`45  DEBUG >> Dec 16 18:00:27 SERVER) OK received`\
+`46  DEBUG >> Dec 16 18:00:27 MUTEX) --------- Leaving ---------`\
+`47  DEBUG >> Dec 16 18:00:27 RISK) --------- Leave shared zone ---------`\
+`48  DEBUG >> Dec 16 18:00:27 SAFE) To 127.0.0.1:28422: RESULT_BOOK 1 1 1`\
+`49  DEBUG >> Dec 16 18:00:27 SERVER) Scénario D`
+
+> Scénario B : Le serveur n'est pas racine, n'a pas encore de demande. Il fait donc la demande (ligne  13).\
+  Scénario J : La prochaine requête dans la queue est la sienne. Il passe donc en SC (ligne 28) après avoir reçu le token (ligne 26) \
+  Scénario D : Le serveur n'a plus rien dans sa queue et ne fait qu'attendre à la sortie de SC (ligne 33). \
+  Scénario C : Le token a été reçu (ligne 26) et n'a pas été renvoyé. Il peut donc passer directement en SC.
+
+__Server 1__\
+`1   server 2 connected`\
+`2   server 4 connected`\
+`3   DEBUG >> Dec 16 17:55:49 SERVER) GO to servers [ 2 4 ]`\
+`4   Server 1 ready to handle clients`\
+`5   DEBUG >> Dec 16 17:55:57 SAFE) To 127.0.0.1:28418: WELCOME { ... }`\
+`6   DEBUG >> Dec 16 17:56:28 SERVER) req 2 received`\
+`7   DEBUG >> Dec 16 17:56:28 SERVER) Scénario G`\
+`8   DEBUG >> Dec 16 17:56:28 SERVER) token 1 to server 2`\
+`9   DEBUG >> Dec 16 17:56:31 SAFE) From 127.0.0.1:28418: LOGIN 1`\
+`10  DEBUG >> Dec 16 17:56:31 RISK) --------- Enter shared zone ---------`\
+`11  DEBUG >> Dec 16 17:56:31 RISK) LOGIN with username: 1 HANDLING `\
+`12  DEBUG >> Dec 16 17:56:31 MUTEX) --------- Asking ---------`\
+`13  DEBUG >> Dec 16 17:56:31 MUTEX) --------- Waiting ---------`\
+`14  DEBUG >> Dec 16 17:56:31 SERVER) Scénario B`\
+`15  DEBUG >> Dec 16 17:56:31 SERVER) req 1 to server 2`\
+`16  DEBUG >> Dec 16 17:56:36 SERVER) req 4 received`\
+`17  DEBUG >> Dec 16 17:56:36 SERVER) Scénario H`\
+`18  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 received`\
+`19  DEBUG >> Dec 16 17:56:43 RISK) LOGIN with username: 3 REPLICATING `\
+`20  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 to servers [ 4 ]`\
+`21  DEBUG >> Dec 16 17:56:43 SERVER) OK received`\
+`22  DEBUG >> Dec 16 17:56:43 SERVER) OK to server 2`\
+`23  DEBUG >> Dec 16 17:56:43 SERVER) token 2 received`\
+`24  DEBUG >> Dec 16 17:56:43 SERVER) Scénario J`\
+`25  DEBUG >> Dec 16 17:56:43 MUTEX) --------- Entering ---------`\
+`26  DEBUG >> Dec 16 17:56:43 SERVER) req 2 received`\
+`27  DEBUG >> Dec 16 17:56:43 SERVER) Scénario H`\
+`28  DEBUG >> Dec 16 17:56:58 RISK) RESULT_LOGIN SUCCESS `\
+`29  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 to servers [ 2 4 ]`\
+`30  DEBUG >> Dec 16 17:56:58 SERVER) OK received`\
+`31  DEBUG >> Dec 16 17:56:58 SERVER) OK received`\
+`32  DEBUG >> Dec 16 17:56:58 MUTEX) --------- Leaving ---------`\
+`33  DEBUG >> Dec 16 17:56:58 RISK) --------- Leave shared zone ---------`\
+`34  DEBUG >> Dec 16 17:56:58 SERVER) token 1 to server 4`\
+`35  DEBUG >> Dec 16 17:56:58 SAFE) To 127.0.0.1:28418: RESULT_LOGIN`\
+`36  DEBUG >> Dec 16 17:56:58 SERVER) req 1 to server 4`\
+`37  DEBUG >> Dec 16 17:56:58 SERVER) Scénario F`\
+`38  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 received`\
+`39  DEBUG >> Dec 16 17:57:13 RISK) LOGIN with username: 4 REPLICATING `\
+`40  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 to servers [ 2 ]`\
+`41  DEBUG >> Dec 16 17:57:13 SERVER) OK received`\
+`42  DEBUG >> Dec 16 17:57:13 SERVER) OK to server 4`\
+`43  DEBUG >> Dec 16 17:57:13 SERVER) token 4 received`\
+`44  DEBUG >> Dec 16 17:57:13 SERVER) token 1 to server 2`\
+`45  DEBUG >> Dec 16 17:57:13 SERVER) Scénario K`\
+`46  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 received`\
+`47  DEBUG >> Dec 16 17:57:28 RISK) LOGIN with username: 0 REPLICATING `\
+`48  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 to servers [ 4 ]`\
+`49  DEBUG >> Dec 16 17:57:28 SERVER) OK received`\
+`50  DEBUG >> Dec 16 17:57:28 SERVER) OK to server 2`\
+`51  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 received`\
+`52  DEBUG >> Dec 16 18:00:27 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`53  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 to servers [ 4 ]`\
+`54  DEBUG >> Dec 16 18:00:27 SERVER) OK received`\
+`55  DEBUG >> Dec 16 18:00:27 SERVER) OK to server 2`
+
+> Scénario G : Le serveur est racine, mais est en attente. Il reçoit une demande et donc transmet son token (ligne 6).\
+  Scénario H : Le serveur est en SC (ligne 25) et reçoit une demande (ligne 26). \
+  Scénario F : Le serveur donne le token (ligne 34), puis effectue une demande (ligne 36). 
+
+__Server 2__\
+`1   server 0 connected`\
+`2   server 3 connected`\
+`3   Parent 1 connected `\
+`4   DEBUG >> Dec 16 17:55:47 SERVER) 2 to server 1`\
+`5   DEBUG >> Dec 16 17:55:49 SERVER) GO to servers [ 0 3 ]`\
+`6   Server 2 ready to handle clients`\
+`7   DEBUG >> Dec 16 17:56:28 SERVER) req 3 received`\
+`8   DEBUG >> Dec 16 17:56:28 SERVER) Scénario I`\
+`9   DEBUG >> Dec 16 17:56:28 SERVER) req 2 to server 1`\
+`10  DEBUG >> Dec 16 17:56:28 SERVER) token 1 received`\
+`11  DEBUG >> Dec 16 17:56:28 SERVER) token 2 to server 3`\
+`12  DEBUG >> Dec 16 17:56:28 SERVER) Scénario K`\
+`13  DEBUG >> Dec 16 17:56:31 SERVER) req 1 received`\
+`14  DEBUG >> Dec 16 17:56:31 SERVER) Scénario I`\
+`15  DEBUG >> Dec 16 17:56:31 SERVER) req 2 to server 3`\
+`16  DEBUG >> Dec 16 17:56:34 SERVER) req 0 received`\
+`17  DEBUG >> Dec 16 17:56:34 SERVER) Scénario H`\
+`18  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 received`\
+`19  DEBUG >> Dec 16 17:56:43 RISK) LOGIN with username: 3 REPLICATING `\
+`20  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 to servers [ 1 0 ]`\
+`21  DEBUG >> Dec 16 17:56:43 SERVER) OK received`\
+`22  DEBUG >> Dec 16 17:56:43 SERVER) OK received`\
+`23  DEBUG >> Dec 16 17:56:43 SERVER) OK to server 3`\
+`24  DEBUG >> Dec 16 17:56:43 SERVER) token 3 received`\
+`25  DEBUG >> Dec 16 17:56:43 SERVER) token 2 to server 1`\
+`26  DEBUG >> Dec 16 17:56:43 SERVER) Scénario L`\
+`27  DEBUG >> Dec 16 17:56:43 SERVER) req 2 to server 1`\
+`28  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 received`\
+`29  DEBUG >> Dec 16 17:56:58 RISK) LOGIN with username: 1 REPLICATING `\
+`30  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 to servers [ 0 3 ]`\
+`31  DEBUG >> Dec 16 17:56:58 SERVER) OK received`\
+`32  DEBUG >> Dec 16 17:56:58 SERVER) OK received`\
+`33  DEBUG >> Dec 16 17:56:58 SERVER) OK to server 1`\
+`34  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 received`\
+`35  DEBUG >> Dec 16 17:57:13 RISK) LOGIN with username: 4 REPLICATING `\
+`36  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 to servers [ 0 3 ]`\
+`37  DEBUG >> Dec 16 17:57:13 SERVER) OK received`\
+`38  DEBUG >> Dec 16 17:57:13 SERVER) OK received`\
+`39  DEBUG >> Dec 16 17:57:13 SERVER) OK to server 1`\
+`40  DEBUG >> Dec 16 17:57:13 SERVER) token 1 received`\
+`41  DEBUG >> Dec 16 17:57:13 SERVER) token 2 to server 0`\
+`42  DEBUG >> Dec 16 17:57:13 SERVER) Scénario K`\
+`43  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 received`\
+`44  DEBUG >> Dec 16 17:57:28 RISK) LOGIN with username: 0 REPLICATING `\
+`45  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 to servers [ 1 3 ]`\
+`46  DEBUG >> Dec 16 17:57:28 SERVER) OK received`\
+`47  DEBUG >> Dec 16 17:57:28 SERVER) OK received`\
+`48  DEBUG >> Dec 16 17:57:28 SERVER) OK to server 0`\
+`49  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 received`\
+`50  DEBUG >> Dec 16 18:00:27 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`51  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 to servers [ 1 3 ]`\
+`52  DEBUG >> Dec 16 18:00:27 SERVER) OK received`\
+`53  DEBUG >> Dec 16 18:00:27 SERVER) OK received`\
+`54  DEBUG >> Dec 16 18:00:27 SERVER) OK to server 0`
+
+> Scénario I : Le serveur n'est pas la racine, reçoit une demande (ligne 7) et fait une demande (ligne 9)\
+  Scénario K : Le serveur reçoit le token (ligne 10) et le renvoi (ligne 11)\
+  Scénario L : Le serveur reçoit le token (ligne 24), le renvoi (ligne 25) et fait une demande (ligne 27)\
+
+__Server 3__\
+`1  Parent 2 connected `\
+`2  DEBUG >> Dec 16 17:55:47 SERVER) 3 to server 2`\
+`3  DEBUG >> Dec 16 17:55:49 SERVER) GO to servers [ ]`\
+`4  Server 3 ready to handle clients`\
+`5  DEBUG >> Dec 16 17:55:54 SAFE) To 127.0.0.1:28410: WELCOME { ... }`\
+`6  DEBUG >> Dec 16 17:56:28 SAFE) From 127.0.0.1:28410: LOGIN 3`\
+`7  DEBUG >> Dec 16 17:56:28 RISK) --------- Enter shared zone ---------`\
+`8  DEBUG >> Dec 16 17:56:28 RISK) LOGIN with username: 3 HANDLING `\
+`9  DEBUG >> Dec 16 17:56:28 MUTEX) --------- Asking ---------`\
+`10  DEBUG >> Dec 16 17:56:28 MUTEX) --------- Waiting ---------`\
+`11  DEBUG >> Dec 16 17:56:28 SERVER) Scénario B`\
+`12  DEBUG >> Dec 16 17:56:28 SERVER) req 3 to server 2`\
+`13  DEBUG >> Dec 16 17:56:28 SERVER) token 2 received`\
+`14  DEBUG >> Dec 16 17:56:28 SERVER) Scénario J`\
+`15  DEBUG >> Dec 16 17:56:28 MUTEX) --------- Entering ---------`\
+`16  DEBUG >> Dec 16 17:56:31 SERVER) req 2 received`\
+`17  DEBUG >> Dec 16 17:56:31 SERVER) Scénario H`\
+`18  DEBUG >> Dec 16 17:56:43 RISK) RESULT_LOGIN SUCCESS `\
+`19  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 to servers [ 2 ]`\
+`20  DEBUG >> Dec 16 17:56:43 SERVER) OK received`\
+`21  DEBUG >> Dec 16 17:56:43 MUTEX) --------- Leaving ---------`\
+`22  DEBUG >> Dec 16 17:56:43 RISK) --------- Leave shared zone ---------`\
+`23  DEBUG >> Dec 16 17:56:43 SERVER) Scénario E`\
+`24  DEBUG >> Dec 16 17:56:43 SAFE) To 127.0.0.1:28410: RESULT_LOGIN`\
+`25  DEBUG >> Dec 16 17:56:43 SERVER) token 3 to server 2`\
+`26  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 received`\
+`27  DEBUG >> Dec 16 17:56:58 RISK) LOGIN with username: 1 REPLICATING `\
+`28  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 to servers [ ]`\
+`29  DEBUG >> Dec 16 17:56:58 SERVER) OK to server 2`\
+`30  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 received`\
+`31  DEBUG >> Dec 16 17:57:13 RISK) LOGIN with username: 4 REPLICATING `\
+`32  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 to servers [ ]`\
+`33  DEBUG >> Dec 16 17:57:13 SERVER) OK to server 2`\
+`34  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 received`\
+`35  DEBUG >> Dec 16 17:57:28 RISK) LOGIN with username: 0 REPLICATING `\
+`36  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 to servers [ ]`\
+`37  DEBUG >> Dec 16 17:57:28 SERVER) OK to server 2`\
+`38  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 received`\
+`39  DEBUG >> Dec 16 18:00:27 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`40  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 to servers [ ]`\
+`41  DEBUG >> Dec 16 18:00:27 SERVER) OK to server 2`
+
+> Scénario E : Le serveur qui la SC (ligne 22) et rend le token (ligne 25).
+
+__Server 4__\
+`1  Parent 1 connected `\
+`2  DEBUG >> Dec 16 17:55:49 SERVER) 4 to server 1`\
+`3  DEBUG >> Dec 16 17:55:49 SERVER) GO to servers [ ]`\
+`4  Server 4 ready to handle clients`\
+`5  DEBUG >> Dec 16 17:56:00 SAFE) To 127.0.0.1:28427: WELCOME { ... }`\
+`6  DEBUG >> Dec 16 17:56:36 SAFE) From 127.0.0.1:28427: LOGIN 4`\
+`7  DEBUG >> Dec 16 17:56:36 RISK) --------- Enter shared zone ---------`\
+`8  DEBUG >> Dec 16 17:56:36 RISK) LOGIN with username: 4 HANDLING `\
+`9  DEBUG >> Dec 16 17:56:36 MUTEX) --------- Asking ---------`\
+`10  DEBUG >> Dec 16 17:56:36 MUTEX) --------- Waiting ---------`\
+`11  DEBUG >> Dec 16 17:56:36 SERVER) Scénario B`\
+`12  DEBUG >> Dec 16 17:56:36 SERVER) req 4 to server 1`\
+`13  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 received`\
+`14  DEBUG >> Dec 16 17:56:43 RISK) LOGIN with username: 3 REPLICATING `\
+`15  DEBUG >> Dec 16 17:56:43 SERVER) LOGIN 3 to servers [ ]`\
+`16  DEBUG >> Dec 16 17:56:43 SERVER) OK to server 1`\
+`17  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 received`\
+`18  DEBUG >> Dec 16 17:56:58 RISK) LOGIN with username: 1 REPLICATING `\
+`19  DEBUG >> Dec 16 17:56:58 SERVER) LOGIN 1 to servers [ ]`\
+`20  DEBUG >> Dec 16 17:56:58 SERVER) OK to server 1`\
+`21  DEBUG >> Dec 16 17:56:58 SERVER) token 1 received`\
+`22  DEBUG >> Dec 16 17:56:58 SERVER) req 1 received`\
+`23  DEBUG >> Dec 16 17:56:58 SERVER) Scénario J`\
+`24  DEBUG >> Dec 16 17:56:58 SERVER) Scénario H`\
+`25  DEBUG >> Dec 16 17:56:58 MUTEX) --------- Entering ---------`\
+`26  DEBUG >> Dec 16 17:57:13 RISK) RESULT_LOGIN SUCCESS `\
+`27  DEBUG >> Dec 16 17:57:13 SERVER) LOGIN 4 to servers [ 1 ]`\
+`28  DEBUG >> Dec 16 17:57:13 SERVER) OK received`\
+`29  DEBUG >> Dec 16 17:57:13 MUTEX) --------- Leaving ---------`\
+`30  DEBUG >> Dec 16 17:57:13 RISK) --------- Leave shared zone ---------`\
+`31  DEBUG >> Dec 16 17:57:13 SERVER) Scénario D`\
+`32  DEBUG >> Dec 16 17:57:13 SERVER) Scénario E`\
+`33  DEBUG >> Dec 16 17:57:13 SAFE) To 127.0.0.1:28427: RESULT_LOGIN`\
+`34  DEBUG >> Dec 16 17:57:13 SERVER) token 4 to server 1`\
+`35  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 received`\
+`36  DEBUG >> Dec 16 17:57:28 RISK) LOGIN with username: 0 REPLICATING `\
+`37  DEBUG >> Dec 16 17:57:28 SERVER) LOGIN 0 to servers [ ]`\
+`38  DEBUG >> Dec 16 17:57:28 SERVER) OK to server 1`\
+`39  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 received`\
+`40  DEBUG >> Dec 16 18:00:27 RISK) BOOK room 1 from night 1 for 1 night(s) REPLICATING `\
+`41  DEBUG >> Dec 16 18:00:27 SERVER) BOOK 1 1 1 0 to servers [ ]`\
+`42  DEBUG >> Dec 16 18:00:27 SERVER) OK to server 1`\
+
+__Attention__ : Le scénario A n'est jamais apparu. La suite de requêtes effectués ne le permettait tout simplement pas.
+
+### Scénario A
+
+Avec l'arborescence des serveurs ainsi que les demandes suivantes :
+![Sans titre](https://user-images.githubusercontent.com/61196479/146682304-8fed4a44-d277-4f3e-97ba-4196257defd6.png)
+
+Le scénario A s'effectuera sur le serveur 2.
+
 
 ## go race
 L'application a passé le test du go race.
