@@ -731,7 +731,7 @@ __Server 4__\
 
 > Aucune nouvelle sitatution particulière ne s'est produite sur ce serveur.
 
-__Globalement__\
+__Globalement__
 - On peut voir que tous les serveurs répliquent les requêtes. 
 - On vérifie que tous se passe bien pour chaque enfant avant d'envoyer le OK au parent.
 - Une entrée en SC arrive toujours après une sortie (sauf la première fois).
