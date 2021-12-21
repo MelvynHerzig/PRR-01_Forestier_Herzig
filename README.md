@@ -301,7 +301,7 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 
 _Synchronisation (une fois au démarrage)_ 
 
-// Server 1 est déjà connecté à serveur 4\
+> Server 1 est déjà connecté à serveur 4\
 Server 2 : <br>
 `2`
 Server 1 :\
