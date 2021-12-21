@@ -296,7 +296,6 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 | Request | req {sender server id} CRLF |
 | Token | token {sender server id} CRLF |
 
-> La version optimisée a été implémentée: un ack est envoyé par un serveur i seulement si son dernier message envoyé n'est pas un req.
 
 ## Exemple d'une conversation entre 2 serveurs Server 2 et Server 1 (en fonction de la configuration initiale)
 
