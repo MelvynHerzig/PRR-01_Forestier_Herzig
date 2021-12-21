@@ -23,8 +23,12 @@ func LogSafe(message string) {
 	debugLog("SAFE) " + message)
 }
 
-func LogMutex(message string){
+func LogMutex(message string) {
 	debugLog("MUTEX) " + message)
+}
+
+func LogServer(message string) {
+	debugLog("SERVER) " + message)
 }
 
 // LogRequestResult logs if communication is a success or failed depending on success argument.

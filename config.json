@@ -1,19 +1,32 @@
 {
-  "debug": false,
+  "debug": true,
   "nbRooms": 10,
   "nbNights": 10,
   "servers": [
     {
       "ip": "127.0.0.1",
-      "port": 3000
+      "port": 3000,
+      "parent": 2
     },
     {
       "ip": "127.0.0.1",
-      "port": 3001
+      "port": 3001,
+      "parent": 1
     },
     {
       "ip": "127.0.0.1",
-      "port": 3002
+      "port": 3002,
+      "parent": 1
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3003,
+      "parent": 2
+    },
+    {
+      "ip": "127.0.0.1",
+      "port": 3004,
+      "parent": 1
     }
   ]
 }

@@ -15,8 +15,9 @@ var reader *configReader = nil
 var localServerNumber uint
 
 type Server struct {
-	Ip   string `json:"ip"`
-	Port uint   `json:"port"`
+	Ip     string `json:"ip"`
+	Port   uint   `json:"port"`
+	Parent uint   `json:"parent"`
 }
 
 type configReader struct {
@@ -123,6 +124,21 @@ func IsServerIP(address string) bool {
 	}
 
 	return false
+}
+
+// GetInitialChildrenIds Compute and return the children of specified Server id
+func GetInitialChildrenIds(id uint) []uint {
+	if reader == nil {
+		log.Fatal("config not initialized")
+	}
+	var children []uint
+	for index, child := range reader.Servers {
+		if child.Parent == id && uint(index) != id{
+			children = append(children, uint(index))
+		}
+	}
+
+	return children
 }
 
 // isLocalhost Check if an adress is localhost
