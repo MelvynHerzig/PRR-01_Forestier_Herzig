@@ -62,7 +62,7 @@ Respository du laboratoire 03 pour le cours PRR
 > En admettant le fichier de configuration précédent:\
 > `$ go run . 0`\
 > `$ go run . 2`\
-> `$ go run . 4`\ 
+> `$ go run . 4`\
 > `$ go run . 1`\
 > `$ go run . 3`
 >
