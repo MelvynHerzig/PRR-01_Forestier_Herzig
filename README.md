@@ -301,7 +301,7 @@ Le serveur récupère le premier mot de la requête et vérifie si il correspond
 
 _Synchronisation (une fois au démarrage)_ 
 
-> Server 1 est déjà connecté à serveur 4\
+(Server 1 est déjà connecté à serveur 4)\
 Server 2 : <br>
 `2`
 Server 1 :\
@@ -318,7 +318,7 @@ Server 1 : <br>
 _Réplication_
 
 Server 2 : <br>
-`BOOK 1 1 2 Pierre`\
+`BOOK 1 1 2 Pierre`
 > Serveur 1 à reçu la demande de réplication, l'a effectué, l'a transmise à 4 qui a confirmé la réplication\
 
 Server 1 : <br> 
